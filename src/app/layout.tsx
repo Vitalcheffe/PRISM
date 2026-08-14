@@ -14,22 +14,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Système Dynamique — Simulateur Macroéconomique",
-  description: "Simulateur macroéconomique haute-fidélité. Données réelles Banque Mondiale, modèle neuronal à retard, réactions en chaîne. Testez la résilience de politiques publiques.",
-  keywords: ["simulateur", "macroéconomie", "simulation", "politique publique", "effet papillon", "Maroc", "Banque Mondiale"],
-  authors: [{ name: "Projet Système Dynamique" }],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
+  title: "PRISM — Non-Linear Macroeconomic Simulator",
+  description: "A non-linear macroeconomic simulator with a 3,008-weight neural network, 10,000 autonomous agents, and causal relationships extracted from real World Bank reports.",
+  keywords: ["economics", "simulation", "neural network", "macroeconomics", "multi-agent", "causal inference", "World Bank"],
+  authors: [{ name: "VitalCheffe" }],
   openGraph: {
-    title: "Système Dynamique — Simulateur Macroéconomique",
-    description: "Simulateur macroéconomique : données réelles, modèle neuronal à retard, réactions en chaîne.",
+    title: "PRISM — Non-Linear Macroeconomic Simulator",
+    description: "3,008-weight neural network, 10,000 agents, 8 factions, real World Bank data.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Système Dynamique",
-    description: "Simulateur macroéconomique haute-fidélité",
+    title: "PRISM",
+    description: "Non-linear macroeconomic simulator",
   },
 };
 
