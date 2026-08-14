@@ -88,6 +88,36 @@ Switching political regime doesn't just change parameters. It rewrites the causa
 
 The engine processes data through six layers. Each layer transforms its input without hardcoded rules — the system learns causal relationships from real documents and computes indicators via a trained neural network.
 
+## Non-linear dynamics
+
+Seven layers of non-linearity sit between the neural network output and the indicators a policymaker reads. Each one transforms the signal: critical thresholds, bifurcations, hysteresis, feedback loops, cascades, exponential runaway, and thermodynamic equilibrium. The stack below shows the signal descending through all seven, with the active transforms glowing.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/nonlinear-stack-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/nonlinear-stack-light.png">
+  <img alt="Non-linear dynamics — the 7-layer stack" src="docs/nonlinear-stack-light.png" width="100%">
+</picture>
+
+## Hysteresis
+
+When a crisis hits, unemployment spikes. When the crisis passes, unemployment falls — but not all the way back. The system remembers. The gap between full recovery and actual recovery is the scar. It decays over eighteen months if nothing else goes wrong. This is why the simulator exists: to feel the scar before it is carved into a real country.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/hysteresis-scar-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/hysteresis-scar-light.png">
+  <img alt="Hysteresis — the scar" src="docs/hysteresis-scar-light.png" width="100%">
+</picture>
+
+## Thermodynamic equilibrium
+
+You cannot maximize one sector without paying for it elsewhere. The system conserves fitness the way a thermodynamic system conserves energy. Push GDP too hard and the whole country slides off the peak. The landscape below is the penalty surface the engine navigates every tick.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/thermodynamic-balance-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/thermodynamic-balance-light.png">
+  <img alt="Thermodynamic equilibrium — over-optimization penalty" src="docs/thermodynamic-balance-light.png" width="100%">
+</picture>
+
 ## How it works
 
 You pick a policy lever — say, the VAT rate. You drag it from 20% to 25%. The neural network forward-passes the new lever vector and produces updated values for GDP, unemployment, inflation, debt-to-GDP, life expectancy, HDI, Gini, and seven other indicators. These aren't formulas — they're learned weights that approximate the economic relationships discovered in real data.
@@ -148,6 +178,14 @@ All 47 baseline values are real. Sources:
 - IMF Article IV Consultation
 - UN PAGE Morocco
 
+Every one of the 47 levers traces to one of these five sources. Zero mock data.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/data-provenance-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/data-provenance-light.png">
+  <img alt="Data provenance — 47 levers, real sources" src="docs/data-provenance-light.png" width="100%">
+</picture>
+
 ## Research methodology
 
 The full mathematical formalism, computational architecture, validation framework, and limitations are documented in [RESEARCH.md](./RESEARCH.md). It covers the neural network equations, the seven non-linear layers, the agent swarm update rules, the causal extraction pipeline, and a comparison with DSGE and DCGE models. The original design notes, preserved word-for-word and progressively visualized, are in [NOTES.md](./NOTES.md).
@@ -163,6 +201,18 @@ bun run dev                                          # port 3000
 ## Stack
 
 Next.js 16, TypeScript, Tailwind CSS 4, Socket.io, Bun, Prisma, SQLite, d3-force, Web Audio API. The neural network is a custom MLP implementation in TypeScript — no TensorFlow, no PyTorch. 3,008 weights, SGD with momentum, He initialization, ReLU activations.
+
+## Visual system
+
+The complete set of thirteen diagrams — dark and light, adaptive to your theme — is collected in a standalone gallery: [docs/gallery.html](./docs/gallery.html). Open it in any browser to scroll through the entire system in one page.
+
+The manifesto below renders the project's founding words — "des liens de liens de liens de liens de liens" — as the recursive causal chain it always was.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/manifesto-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/manifesto-light.png">
+  <img alt="Manifesto — des liens de liens de liens de liens de liens" src="docs/manifesto-light.png" width="100%">
+</picture>
 
 ## License
 

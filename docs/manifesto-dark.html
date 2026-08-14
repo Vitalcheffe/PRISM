@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:800px;background:#0d1117;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1px,transparent 1px);background-size:32px 32px;opacity:0.5}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Soft central amber glow behind the fractal */
+.center-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:720px;height:720px;background:radial-gradient(circle,rgba(245,158,11,0.07) 0%,transparent 65%);pointer-events:none;z-index:0}
+
+.title-block{position:absolute;top:30px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.title-block h2{font-size:13px;color:#8b949e;letter-spacing:0.3em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.title-block .phrase{font-size:12px;color:#3d444d;margin-top:16px;font-family:'SF Mono',monospace;font-style:italic;letter-spacing:0.06em}
+
+.bottom-phrase{position:absolute;bottom:54px;left:50%;transform:translateX(-50%);font-size:12px;color:#3d444d;font-family:'SF Mono',monospace;font-style:italic;letter-spacing:0.06em;text-align:center;z-index:2;max-width:900px}
+
+.meta{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:9px;color:#3d444d;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2;white-space:nowrap}
+
+.fractal-wrap{position:absolute;top:90px;left:50%;transform:translateX(-50%);z-index:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+<div class="center-glow"></div>
+
+<div class="title-block">
+<h2>MANIFESTO</h2>
+<div class="phrase">des liens de liens de liens de liens de liens</div>
+</div>
+
+<div class="fractal-wrap" id="fractal"></div>
+
+<div class="bottom-phrase">une réaction en chaîne comme si tu jetais deux atomes</div>
+
+<div class="meta">PRISM / MANIFESTO / 47 → 10,000 → ∞</div>
+</div>
+
+<script>
+(function(){
+  const ringCounts = [6, 14, 30, 60];
+  const ringRadii  = [50, 125, 200, 280];
+  const ringSizes  = [4, 3, 2.2, 1.6];
+  const ringOps    = [0.95, 0.55, 0.28, 0.13];
+
+  let seed = 20240117;
+  function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+
+  const rings = [];
+  for(let r=0; r<ringCounts.length; r++){
+    const n = ringCounts[r];
+    const radius = ringRadii[r];
+    const rotation = r * 0.18;
+    const arr = [];
+    for(let i=0; i<n; i++){
+      const angle = (i/n) * 2*Math.PI + rotation;
+      const angleJit = r > 0 ? (rnd()-0.5) * 0.35 / Math.sqrt(r) : 0;
+      const radJit = r > 0 ? (rnd()-0.5) * 0.20 : 0;
+      const a = angle + angleJit;
+      const rad = radius * (1 + radJit);
+      arr.push({x: rad*Math.cos(a), y: rad*Math.sin(a), ring: r});
+    }
+    rings.push(arr);
+  }
+
+  // Two atoms at center, almost touching
+  const atoms = [{x:-7, y:0}, {x:7, y:0}];
+
+  let s = '<svg width="620" height="620" viewBox="-310 -310 620 620">';
+  s += '<defs>';
+  s += '<filter id="bright" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>';
+  s += '<filter id="atomGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>';
+  s += '</defs>';
+
+  // Edges from atoms to ring 0
+  for(const atom of atoms){
+    for(const node of rings[0]){
+      s += '<line x1="'+atom.x.toFixed(2)+'" y1="'+atom.y.toFixed(2)+'" x2="'+node.x.toFixed(2)+'" y2="'+node.y.toFixed(2)+'" stroke="#f59e0b" stroke-width="0.6" opacity="0.4"/>';
+    }
+  }
+
+  // Edges between rings (2-3 connections per node, by nearest angle)
+  const edgeOps = [0.4, 0.25, 0.12, 0.05];
+  const edgeW = [0.6, 0.5, 0.4, 0.3];
+
+  for(let r=0; r<rings.length-1; r++){
+    const fromRing = rings[r];
+    const toRing = rings[r+1];
+    const baseOp = edgeOps[r];
+    const sw = edgeW[r];
+
+    for(let i=0; i<fromRing.length; i++){
+      const from = fromRing[i];
+      const fromAngle = Math.atan2(from.y, from.x);
+      const candidates = [];
+      for(let j=0; j<toRing.length; j++){
+        const to = toRing[j];
+        const toAngle = Math.atan2(to.y, to.x);
+        let diff = Math.abs(fromAngle - toAngle);
+        if(diff > Math.PI) diff = 2*Math.PI - diff;
+        candidates.push({j, diff});
+      }
+      candidates.sort((a,b) => a.diff - b.diff);
+      // 2-3 connections, alternating
+      const k = r === 0 ? 3 : (2 + (i % 2));
+      const finalK = Math.min(k, candidates.length);
+      for(let m=0; m<finalK; m++){
+        const to = toRing[candidates[m].j];
+        s += '<line x1="'+from.x.toFixed(2)+'" y1="'+from.y.toFixed(2)+'" x2="'+to.x.toFixed(2)+'" y2="'+to.y.toFixed(2)+'" stroke="#f59e0b" stroke-width="'+sw+'" opacity="'+baseOp+'"/>';
+      }
+    }
+  }
+
+  // 4 bright active edges (chain reaction) in mid-rings (ring1 → ring2)
+  const brightPairs = new Set();
+  let brightCount = 0;
+  let attempts = 0;
+  while(brightCount < 4 && attempts < 80){
+    attempts++;
+    const fromIdx = Math.floor(rnd() * rings[1].length);
+    const toIdx = Math.floor(rnd() * rings[2].length);
+    const key = fromIdx + '_' + toIdx;
+    if(brightPairs.has(key)) continue;
+    // Also avoid picking fromIdx too close to existing brights
+    let tooClose = false;
+    for(const p of brightPairs){
+      const fi = parseInt(p.split('_')[0]);
+      if(Math.abs(fi - fromIdx) < 2){ tooClose = true; break; }
+    }
+    if(tooClose) continue;
+    brightPairs.add(key);
+    const from = rings[1][fromIdx];
+    const to = rings[2][toIdx];
+    s += '<line x1="'+from.x.toFixed(2)+'" y1="'+from.y.toFixed(2)+'" x2="'+to.x.toFixed(2)+'" y2="'+to.y.toFixed(2)+'" stroke="#f59e0b" stroke-width="3" opacity="0.35" filter="url(#bright)"/>';
+    s += '<line x1="'+from.x.toFixed(2)+'" y1="'+from.y.toFixed(2)+'" x2="'+to.x.toFixed(2)+'" y2="'+to.y.toFixed(2)+'" stroke="#f59e0b" stroke-width="1.3" opacity="0.85"/>';
+    brightCount++;
+  }
+
+  // Draw atoms (with strong glow)
+  for(const atom of atoms){
+    s += '<circle cx="'+atom.x.toFixed(2)+'" cy="'+atom.y.toFixed(2)+'" r="24" fill="#f59e0b" opacity="0.12" filter="url(#atomGlow)"/>';
+    s += '<circle cx="'+atom.x.toFixed(2)+'" cy="'+atom.y.toFixed(2)+'" r="14" fill="#f59e0b" opacity="0.3" filter="url(#atomGlow)"/>';
+    s += '<circle cx="'+atom.x.toFixed(2)+'" cy="'+atom.y.toFixed(2)+'" r="10" fill="#f59e0b" opacity="0.92"/>';
+    s += '<circle cx="'+atom.x.toFixed(2)+'" cy="'+atom.y.toFixed(2)+'" r="4" fill="#fff7e6" opacity="0.85"/>';
+  }
+
+  // Draw nodes per ring
+  for(let r=0; r<rings.length; r++){
+    for(const node of rings[r]){
+      s += '<circle cx="'+node.x.toFixed(2)+'" cy="'+node.y.toFixed(2)+'" r="'+ringSizes[r]+'" fill="#f59e0b" opacity="'+ringOps[r]+'"/>';
+    }
+  }
+
+  s += '</svg>';
+  document.getElementById('fractal').innerHTML = s;
+})();
+</script>
+</body>
+</html>

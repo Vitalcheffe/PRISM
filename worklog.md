@@ -121,3 +121,69 @@ Stage Summary:
 - render-pngs.sh: reproducible render utility, kept in repo root.
 - App verified live and interactive through gateway.
 - Ready for commit 6.
+
+---
+Task ID: 7-a
+Agent: visual-extension-and-gallery
+Task: Build 5 new viz sets (dark+light) + gallery.html portfolio page.
+
+Work Log:
+- Read worklog.md, banner-v2-dark/light.html, reactor-prisms-dark.html, neural-active-dark.html, causal-graph-dark.html, paradigm-shift-dark.html, agent-swarm-dark.html, architecture-dark.html to absorb the established visual grammar (dark=#0d1117/#f0f6fc/#8b949e/#3d444d, light=#ffffff/#1A1A1A/#737373/#D4D4D4, amber #f59e0b, dot-grid 32px, film grain turbulence 0.015 opacity, SF Pro/SF Mono fonts, centered composition, no cards/borders/rectangles).
+- Read RESEARCH.md §5 (Non-Linear Dynamics — 7 Layers, math for criticalThreshold/bifurcation/Hysteresis/feedbackLoop/cascadeEffect/exponentialRunaway/diminishingReturns+systemTension), §11 (Data Provenance — 47 levers mapped to World Bank WDI / Loi de Finances / Bank Al-Maghrib / IMF Article IV / UN PAGE with real indicator codes like NY.GDP.MKTP.CD), §12 (Validation Framework — historical backtesting protocol, sensitivity analysis, known limitations).
+- Read NOTES.md to capture the creator's exact French words for the manifesto: "des liens de liens de liens de liens de liens" and "une réaction en chaîne comme si tu jetais deux atomes".
+- Built nonlinear-stack (dark+light, 1920×960): 7 horizontal bands stacked vertically (each 100px tall, max-width 1100px). Each band has layer number (11px mono tertiary), name (14px medium primary), one-line description (11px secondary), and an inline ~200×70 SVG showing that layer's mathematical character (step function, Y-fork, hysteresis loop with arrows, logarithmic spiral via inline script, branching tree, exponential curve via inline script, peak-with-ball landscape). Vertical amber signal line on left edge with entry/exit caps and 6 pulse dots at band boundaries. 3 active bands (02 Bifurcation, 04 Feedback Loop, 06 Exponential Runaway) with radial amber glow halos and SVG drop-shadow. 6 thin 1px rules at 4% opacity between bands. Signal flows TOP→BOTTOM, bright at top fading at exit.
+- Built hysteresis-scar (dark+light, 1920×760): full-bleed SVG chart (1920×520) with plot offset (260,25) and plot area 1400×460. Two trajectories via smooth Catmull-Rom-to-Bezier paths: dashed tertiary reference (unemployment 8%→18%→8% recovery by month 30) and solid amber actual (8%→18%→13% plateau). Scar region (rectangle from month 30-48 between y=13% and y=8%) filled at 8% amber tint with dashed top edge. Vertical dashed crimson line at month 6 (CRISIS label) and tertiary at month 18 (RECOVERY label). Faint gridlines at 5/10/15/20% at 3% opacity. Baseline + y-axis at 8% opacity (no axes box). Annotation "hysteresis: the system remembers" with leader line to plateau. Right-side labels WITHOUT HYSTERESIS (tertiary) and THE SCAR · +5.0 pp (amber). Peak/plateau/baseline value labels (18.0%, 13.0%, 8.0%).
+- Built thermodynamic-balance (dark+light, 1920×760): centered SVG 1200×620 with viewBox="-600 -310 1200 620". 8 organic closed-contour Bézier paths (Catmull-Rom-to-Bezier with seeded RNG jitter 0.18) at radii 25/50/75/100/125/150/175/200, opacity decreasing from 25% (innermost) to 4% (outermost). 5 radial axes at -90°/-18°/54°/126°/198° (ECONOMY/HEALTH/EDUCATION/INFRA/GOVERNANCE) with labels at axis tips + 20px. 5 sector dots (5px, category-colored) at varying radii (80/130/105/145/100). System state (8px amber with 14px glow + 3px white-hot center) at offset (26,-14). Crimson arrow from system state to (0,-100) on ECONOMY axis at lower contour, with arrowhead and labels OVER-OPTIMIZE GDP / −12% SYSTEM FITNESS. PEAK label at center.
+- Built data-provenance (dark+light, 1920×760): centered SVG 1300×620 with viewBox="-650 -310 1300 620". Central MOROCCO node (60px circle outline at 50% amber + dashed outer ring + MOROCCO label + 47 LEVERS subtitle). 5 source nodes arranged in a pentagon at radius 280: WORLD BANK (top, amber, 23 levers), LOI DE FINANCES 2023 (upper-right, emerald, 9 levers), BANK AL-MAGHRIB (lower-right, cyan, 6 levers), IMF ARTICLE IV (lower-left, violet, 5 levers), UN PAGE (upper-left, yellow, 4 levers). Each source: 4px colored dot + 7px outline ring + 12px mono name in source color + 4 stacked 9px mono tertiary lever IDs (real codes: NY.GDP.MKTP.CD, SP.POP.TOTL, SL.UEM.TOTL.ZS, BX.KLT.DINV.CD.WD, vat_rate, corporate_tax, subsidies_budget, public_wage_bill, policy_rate, reserve_ratio, exchange_rate, money_supply, debt_to_gdp, fiscal_deficit, current_account, fx_reserves, hdi, school_enrollment, life_expectancy, gender_index). Edges from each source to MOROCCO at 35% source-color opacity, with "N LEVERS" midpoint labels. Two faint concentric guide circles (radii 120, 200) and a "23 + 9 + 6 + 5 + 4 = 47" summary line.
+- Built manifesto (dark+light, 1920×800): inline-script-generated fractal causal network. 4 rings of 6/14/30/60 = 110 nodes at radii 50/125/200/280, with seeded RNG (seed=20240117) for organic angular + radial jitter. Two atoms at center (offset ±7 from origin) with strong drop-shadow glow (24px outer + 14px mid + 10px solid + 4px white-hot). Each ring's nodes connect to 2-3 nearest-by-angle nodes in the next ring (atoms→ring0: 3 connections each at 40% opacity 0.6px; ring0→ring1: 3 each at 25% 0.5px; ring1→ring2: alternating 2-3 at 12% 0.4px; ring2→ring3: 2 each at 5% 0.3px). 4 bright active edges (chain reaction) in mid-rings (ring1→ring2) at 70-85% opacity 1.3px with feGaussianBlur glow underlay. Top phrase "des liens de liens de liens de liens de liens" and bottom phrase "une réaction en chaîne comme si tu jetais deux atomes" — both verbatim from the creator's NOTES.md, 12px monospace italic tertiary. Title "MANIFESTO" 13px monospace tertiary letter-spacing 0.3em. Soft central radial-glow div behind the fractal at 7% amber.
+- Built gallery.html: standalone responsive portfolio page. CSS variables for theme switching (dark/light) with localStorage persistence + system prefers-color-scheme default + live system-change listener. Fixed top nav (56px, backdrop-filter blur 14px, translucent bg, bottom border 1px): "PRISM" 16px semibold left, 12 anchor links centered (Reactor·Neural·Swarm·Causal·Decree·Black Swan·Paradigm·Non-Linear·Hysteresis·Equilibrium·Provenance·Manifesto) at 12px SF Mono secondary with amber hover, theme toggle button (inline SVG sun/moon icons that swap via [data-theme]) + GitHub ↗ link right. Hero (100vh): banner-v2 <picture> with media-query sources + data-dark/data-light attrs (swapped by JS on toggle), tagline "A non-linear macroeconomic simulator." 14px secondary, scroll indicator (animated amber gradient line + chevron). 13 sections each with section number (11px SF Mono amber letter-spacing 0.2em), title (28px semibold -0.02em), subtitle (14px secondary max-width 600px), <picture> image with data-dark/data-light attrs for theme swap, caption (13px secondary max-width 700px line-height 1.7), facts line (11px SF Mono tertiary letter-spacing 0.1em). 12 dividers between sections (1px border at 60% opacity). Footer (80px tall, top border 1px): "PRISM · MIT License" left, RESEARCH.md/NOTES.md/GitHub links center (relative paths ../RESEARCH.md, ../NOTES.md, https://github.com/Vitalcheffe/PRISM), "v1.0" right. Responsive at <768px: nav links collapse, padding reduces 120→80px, hero/section fonts shrink, footer stacks vertically.
+- Verified all 11 files via agent-browser DOM eval: correct body dimensions (1920×960/760/760/760/800 ×2 + gallery), correct text labels (CRISIS, RECOVERY, WITHOUT HYSTERESIS, THE SCAR · +5.0 pp, OVER-OPTIMIZE GDP, −12% SYSTEM FITNESS, MOROCCO, 23/9/6/5/4 LEVERS, all 20 lever IDs including NY.GDP.MKTP.CD, both manifesto French phrases verbatim), correct element counts (7 bands + 3 active + 6 pulses + 6 rules in nonlinear-stack; 8 contour paths + 5 axes + 19 circles in thermodynamic-balance; 110 nodes + 2 atoms + 148 edges in manifesto; 13 sections + 14 pictures + 14 imgs-with-data-dark in gallery). Theme toggle verified to swap all 14 gallery images between dark/light variants and persist to localStorage. Rendered all 10 viz HTMLs to PNGs via render-new-pngs.sh (file sizes 198-537KB confirm non-blank content; PNG dimensions verified 1920×960/760/800).
+
+Stage Summary:
+- 11 files created in /home/z/my-project/docs/:
+  - nonlinear-stack-dark.html, nonlinear-stack-light.html (1920×960)
+  - hysteresis-scar-dark.html, hysteresis-scar-light.html (1920×760)
+  - thermodynamic-balance-dark.html, thermodynamic-balance-light.html (1920×760)
+  - data-provenance-dark.html, data-provenance-light.html (1920×760)
+  - manifesto-dark.html, manifesto-light.html (1920×800)
+  - gallery.html (responsive standalone portfolio page)
+- 10 corresponding PNGs rendered (dark+light for each viz) for use in gallery and NOTES.md.
+- render-new-pngs.sh utility added to /home/z/my-project/ for re-rendering the new viz set.
+- Key design decisions:
+  - Used inline <script> with seeded RNG for procedural generation where density required it: logarithmic spiral (band 4) and exponential curve (band 6) in nonlinear-stack, organic Bézier contours in thermodynamic-balance, fractal ring network in manifesto. All other SVG content hand-authored inline for clarity.
+  - Catmull-Rom-to-Bezier conversion used for smooth chart trajectories (hysteresis-scar) and organic closed-contour shapes (thermodynamic-balance) — gives natural-looking curves without manual Bézier control-point tuning.
+  - Manifesto rings connect each node to 2-3 nearest nodes in the next ring BY ANGULAR DISTANCE — produces a clean radial chain-reaction aesthetic without edge crossings.
+  - Gallery uses BOTH <picture> with prefers-color-scheme media query (for initial system-based display) AND data-dark/data-light attributes (for manual JS-driven swap on toggle). localStorage persists user choice; live listener follows system changes when no explicit choice saved.
+  - Gallery CSS variables drive the entire recolor — only the dot-grid background and body bg/text colors change, all visual hierarchy preserved across themes.
+  - All 5 viz sets follow the established visual grammar exactly: dot-grid + film grain overlay, centered composition, no cards/borders/rectangles around content, monospace tertiary meta stamps, amber used sparingly as the single accent color, dark/light variants mirror colors per the established palette.
+  - Manifesto speaks the creator's exact French words verbatim — "des liens de liens de liens de liens de liens" (top) and "une réaction en chaîne comme si tu jetais deux atomes" (bottom) — both pulled directly from NOTES.md, never altered.
+
+---
+Task ID: 7-b
+Agent: orchestrator (main)
+Task: Integrate 5 new visuals into NOTES.md and README.md, verify gallery, commit.
+
+Work Log:
+- Verified all 11 new HTML files from Task 7-a exist with correct dimensions (5 viz sets × dark/light + gallery.html).
+- Verified 10 new PNGs render at correct sizes (1920×960, 1920×760, 1920×800 per spec).
+- Verified gallery.html structure: 14 sections, 14 pictures, 13 nav links, theme toggle (dark #0d1117 ↔ light #ffffff confirmed via getComputedStyle).
+- Verified manifesto contains user's exact French phrases verbatim: "des liens de liens de liens de liens de liens" and "une réaction en chaîne comme si tu jetais deux atomes".
+- Verified data-provenance contains real World Bank indicator codes: NY.GDP.MKTP.CD, SP.POP.TOTL, SL.UEM.TOTL.ZS, BX.KLT.DINV.CD.WD.
+- Integrated 5 new visuals into NOTES.md at exact narrative beats:
+  · nonlinear-stack → Act II after neural-active (the 7 transforms between network and truth)
+  · thermodynamic-balance → Act II after "cubes are not all equal" (over-optimization penalty)
+  · hysteresis-scar → Act V after black-swan-cascade (the scar that recovery doesn't erase)
+  · data-provenance → Act V "Don't hardcode" section (replaced repeated causal-graph, proves real data)
+  · manifesto → new Epilogue at the end (the dream realized, user's words rendered visual)
+  NOTES.md now 373 lines, 13 embedded images, 6 acts (I-V + Epilogue).
+- Updated README.md: added Non-linear dynamics, Hysteresis, Thermodynamic equilibrium sections; data-provenance image in Data section; Visual system section with gallery link + manifesto image before License. README now 219 lines.
+- Lint: clean, zero errors.
+- Gallery full-page screenshot: 2.9MB, all 13 sections render with images.
+- Dev server: alive on port 3000, engine on port 3003, app loads through gateway with live data.
+
+Stage Summary:
+- 5 new visualization sets (10 PNGs) + gallery.html added to docs/.
+- NOTES.md: 6-act progressive visual narrative, 13 images, epilogue with manifesto.
+- README.md: 13 visual sections + gallery link + manifesto.
+- Total docs/ visual system: 13 visualization sets (26 PNGs dark+light) + 1 architecture + 1 gallery = 28 images, 27 HTML files.
+- Ready for commit 7.

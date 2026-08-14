@@ -77,6 +77,21 @@ Imagine ton pays tu passes d'une monarchie à démocratie bah les valeurs sont p
   <img alt="Neural network forward pass — 47 to 32 to 32 to 15" src="docs/neural-active-light.png" width="100%">
 </picture>
 
+> But the network's raw output is not the final answer. Between the 15
+> computed indicators and the numbers a policymaker reads, there are seven
+> layers of non-linearity. Debt above 80% of GDP doesn't add risk linearly —
+> it compounds exponentially. Unemployment above 15% doesn't rise smoothly
+> — the system bifurcates into a different regime. A crisis leaves a scar
+> that recovery doesn't erase. Over-optimizing one sector penalizes the
+> whole. These are not formulas. They are the seven transforms the signal
+> passes through on its way from the network to the truth.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/nonlinear-stack-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/nonlinear-stack-light.png">
+  <img alt="The 7 non-linear layers — signal transformation stack" src="docs/nonlinear-stack-light.png" width="100%">
+</picture>
+
 ---
 
 ### You can't touch everything
@@ -107,6 +122,18 @@ Le PIB n'est pas forcément une variable. Le PIB ça peut être une variable de 
 > inflation, debt-to-GDP, life expectancy, HDI, Gini, and eight others)
 > live in the output layer. They are never set by hand. They are always
 > computed.
+
+> And you cannot push one to the maximum without paying for it somewhere
+> else. The system conserves fitness the way a thermodynamic system
+> conserves energy. Over-optimizing GDP pushes the whole country off the
+> peak. The landscape below is not a metaphor — it is the penalty surface
+> the engine navigates every tick.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/thermodynamic-balance-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/thermodynamic-balance-light.png">
+  <img alt="Thermodynamic equilibrium — the over-optimization penalty" src="docs/thermodynamic-balance-light.png" width="100%">
+</picture>
 
 ---
 
@@ -259,6 +286,20 @@ On travaille avec les Nations Unies pour le cadre des MUN. Dans les MUN, soit da
   <img alt="Black swan — cascade chain with conditional probabilities" src="docs/black-swan-cascade-light.png" width="100%">
 </picture>
 
+> And when the crisis passes, the damage doesn't. Unemployment rose to
+> 18% during the shock. In a world without memory, it would return to 8%.
+> But the system remembers. Recovery stalls at 13%. The five-percentage-point
+> gap is the scar — the hysteresis. It decays slowly, over eighteen months,
+> if nothing else goes wrong. Something always goes wrong. This is why
+> prevention is cheaper than cure, and why the simulator exists: to feel
+> the scar before it is carved into a real country.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/hysteresis-scar-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/hysteresis-scar-light.png">
+  <img alt="Hysteresis — the scar that recovery doesn't erase" src="docs/hysteresis-scar-light.png" width="100%">
+</picture>
+
 ---
 
 ### The AI sycophancy problem
@@ -285,16 +326,19 @@ T'as pas le droit au mock data ou au data hard codé. Commence maintenant. Je ve
 
 Crée un vrai système. Une vraie logique. Une vraie méthodologie. Si je dois payer 100€ ou avoir des mock data, je paye.
 
-> Every edge in the graph below was extracted from a real document by an
+> Every edge in the causal graph was extracted from a real document by an
 > LLM. Every weight in the network was trained. Every baseline value comes
-> from World Bank Open Data, the Loi de Finances, Bank Al-Maghrib, or the
-> IMF. Nothing here is invented. The full methodology — equations, sources,
-> limitations — is documented in [RESEARCH.md](./RESEARCH.md).
+> from a real source. Nothing here is invented. The map below traces all
+> 47 levers to their origin: World Bank Open Data with exact indicator codes
+> (`NY.GDP.MKTP.CD`, `SP.POP.TOTL`, `SL.UEM.TOTL.ZS`), the Loi de Finances
+> Maroc 2023, Bank Al-Maghrib, the IMF Article IV consultation, and UN PAGE.
+> Zero mock data. The full methodology — equations, sources, limitations —
+> is documented in [RESEARCH.md](./RESEARCH.md).
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/causal-graph-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="docs/causal-graph-light.png">
-  <img alt="The learned causal graph — nothing hardcoded" src="docs/causal-graph-light.png" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/data-provenance-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/data-provenance-light.png">
+  <img alt="Data provenance — 47 levers traced to real sources" src="docs/data-provenance-light.png" width="100%">
 </picture>
 
 ---
@@ -306,3 +350,24 @@ Crée un vrai système. Une vraie logique. Une vraie méthodologie. Si je dois p
   <source media="(prefers-color-scheme: light)" srcset="docs/architecture-light.png">
   <img alt="PRISM architecture" src="docs/architecture-light.png" width="100%">
 </picture>
+
+---
+
+## Epilogue — The Dream, Realized
+
+> The words below were spoken before any of this existed. They described a
+> mind that could not hold its own vision — "j'imagine deux ridicules de le
+> lendemain, j'oublie tout." The system is the externalization of that mind.
+> 47 levers became 10,000 agents became an infinity of links. Two atoms,
+> thrown into the field, send ripples outward through four rings of causal
+> density, fading into the distance but never quite stopping. This is the
+> manifesto, rendered: des liens de liens de liens de liens de liens.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/manifesto-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/manifesto-light.png">
+  <img alt="Manifesto — des liens de liens de liens de liens de liens" src="docs/manifesto-light.png" width="100%">
+</picture>
+
+> The complete visual system — all thirteen diagrams, dark and light —
+> is collected in [docs/gallery.html](./docs/gallery.html).

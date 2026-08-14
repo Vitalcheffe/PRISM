@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:760px;background:#0d1117;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1px,transparent 1px);background-size:32px 32px;opacity:0.5}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.label{position:absolute;top:36px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.label h2{font-size:13px;color:#8b949e;letter-spacing:0.25em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.label p{font-size:11px;color:#3d444d;margin-top:6px;font-family:'SF Mono',monospace;letter-spacing:0.05em}
+
+.plot{position:absolute;top:120px;left:0;width:1920px;height:520px;z-index:1}
+
+.meta{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:9px;color:#3d444d;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+
+<div class="label">
+<h2>Hysteresis — The Scar</h2>
+<p>once a crisis happens, the system remembers · recovery is partial</p>
+</div>
+
+<div class="plot">
+<svg width="1920" height="520" viewBox="0 0 1920 520" id="chart"></svg>
+</div>
+
+<div class="meta">PRISM / HYSTERESIS / MEMORY DECAY τ = 18 MONTHS</div>
+</div>
+
+<script>
+(function(){
+  // Plot offset within SVG: left=260, top=25, width=1400, height=460.
+  const PL=260, PT=25, PW=1400, PH=460;
+  const xPlot = m => PL + (m/48)*PW;
+  const yPlot = p => PT + PH - (p/20)*PH;
+
+  const dashed = [[0,8],[6,8],[12,14],[18,18],[24,14],[30,8],[36,8],[42,8],[48,8]];
+  const solid  = [[0,8],[6,8],[12,14],[18,18],[24,15],[30,13],[36,13],[42,13],[48,13]];
+
+  function toPts(arr){return arr.map(d=>({x:xPlot(d[0]),y:yPlot(d[1])}));}
+  function smoothPath(points){
+    if(points.length<2)return '';
+    let d='M '+points[0].x.toFixed(1)+','+points[0].y.toFixed(1);
+    for(let i=0;i<points.length-1;i++){
+      const p0=points[Math.max(0,i-1)];
+      const p1=points[i];
+      const p2=points[i+1];
+      const p3=points[Math.min(points.length-1,i+2)];
+      const cp1x=p1.x+(p2.x-p0.x)/6;
+      const cp1y=p1.y+(p2.y-p0.y)/6;
+      const cp2x=p2.x-(p3.x-p1.x)/6;
+      const cp2y=p2.y-(p3.y-p1.y)/6;
+      d+=' C '+cp1x.toFixed(1)+','+cp1y.toFixed(1)+' '+cp2x.toFixed(1)+','+cp2y.toFixed(1)+' '+p2.x.toFixed(1)+','+p2.y.toFixed(1);
+    }
+    return d;
+  }
+
+  const dashedPts=toPts(dashed);
+  const solidPts=toPts(solid);
+  const dashedPath=smoothPath(dashedPts);
+  const solidPath=smoothPath(solidPts);
+
+  // Scar region (rectangle from m=30 to m=48 between y=13 and y=8)
+  const scarPath =
+    'M '+xPlot(30).toFixed(1)+','+yPlot(13).toFixed(1)+
+    ' L '+xPlot(48).toFixed(1)+','+yPlot(13).toFixed(1)+
+    ' L '+xPlot(48).toFixed(1)+','+yPlot(8).toFixed(1)+
+    ' L '+xPlot(30).toFixed(1)+','+yPlot(8).toFixed(1)+' Z';
+
+  let s = '<defs><filter id="lineglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>';
+
+  // Faint horizontal gridlines at 5/10/15/20%
+  for(const p of [5,10,15,20]){
+    s+='<line x1="'+PL+'" y1="'+yPlot(p).toFixed(1)+'" x2="'+(PL+PW).toFixed(1)+'" y2="'+yPlot(p).toFixed(1)+'" stroke="#f0f6fc" stroke-width="0.5" opacity="0.03"/>';
+    s+='<text x="'+(PL-10).toFixed(1)+'" y="'+(yPlot(p)+3).toFixed(1)+'" fill="#3d444d" font-family="SF Mono" font-size="9" text-anchor="end" opacity="0.6">'+p+'%</text>';
+  }
+  s+='<text x="'+(PL-10).toFixed(1)+'" y="'+(yPlot(0)+3).toFixed(1)+'" fill="#3d444d" font-family="SF Mono" font-size="9" text-anchor="end" opacity="0.6">0%</text>';
+
+  // Baseline (x-axis) at 0%
+  s+='<line x1="'+PL+'" y1="'+yPlot(0).toFixed(1)+'" x2="'+(PL+PW).toFixed(1)+'" y2="'+yPlot(0).toFixed(1)+'" stroke="#f0f6fc" stroke-width="1" opacity="0.08"/>';
+  // Vertical month-0 line (y-axis)
+  s+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(PT+PH).toFixed(1)+'" stroke="#f0f6fc" stroke-width="1" opacity="0.08"/>';
+
+  // X-axis tick labels
+  for(let m=0;m<=48;m+=6){
+    s+='<text x="'+xPlot(m).toFixed(1)+'" y="'+(PT+PH+18).toFixed(1)+'" fill="#3d444d" font-family="SF Mono" font-size="9" text-anchor="middle" opacity="0.6">M'+m+'</text>';
+  }
+
+  // Vertical dashed crimson line at month 6 (CRISIS)
+  s+='<line x1="'+xPlot(6).toFixed(1)+'" y1="'+PT+'" x2="'+xPlot(6).toFixed(1)+'" y2="'+(PT+PH).toFixed(1)+'" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.7"/>';
+  s+='<text x="'+xPlot(6).toFixed(1)+'" y="'+(PT-10).toFixed(1)+'" fill="#ef4444" font-family="SF Mono" font-size="10" text-anchor="middle" letter-spacing="0.15em">CRISIS</text>';
+
+  // Vertical dashed tertiary line at month 18 (RECOVERY)
+  s+='<line x1="'+xPlot(18).toFixed(1)+'" y1="'+PT+'" x2="'+xPlot(18).toFixed(1)+'" y2="'+(PT+PH).toFixed(1)+'" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.5"/>';
+  s+='<text x="'+xPlot(18).toFixed(1)+'" y="'+(PT-10).toFixed(1)+'" fill="#8b949e" font-family="SF Mono" font-size="10" text-anchor="middle" letter-spacing="0.15em">RECOVERY</text>';
+
+  // Scar fill (8% amber tint)
+  s+='<path d="'+scarPath+'" fill="rgba(245,158,11,0.08)"/>';
+  // Soft top edge of scar (dashed thin)
+  s+='<line x1="'+xPlot(30).toFixed(1)+'" y1="'+yPlot(13).toFixed(1)+'" x2="'+xPlot(48).toFixed(1)+'" y2="'+yPlot(13).toFixed(1)+'" stroke="#f59e0b" stroke-width="0.6" opacity="0.35" stroke-dasharray="1,3"/>';
+
+  // Dashed reference trajectory
+  s+='<path d="'+dashedPath+'" fill="none" stroke="#8b949e" stroke-width="1.4" opacity="0.4" stroke-dasharray="5,4"/>';
+
+  // Solid amber trajectory (with glow)
+  s+='<path d="'+solidPath+'" fill="none" stroke="#f59e0b" stroke-width="3" opacity="0.25" filter="url(#lineglow)"/>';
+  s+='<path d="'+solidPath+'" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="1"/>';
+
+  // Peak marker
+  s+='<circle cx="'+xPlot(18).toFixed(1)+'" cy="'+yPlot(18).toFixed(1)+'" r="3.5" fill="#f59e0b"/>';
+  s+='<circle cx="'+xPlot(18).toFixed(1)+'" cy="'+yPlot(18).toFixed(1)+'" r="7" fill="none" stroke="#f59e0b" stroke-width="0.6" opacity="0.4"/>';
+
+  // Plateau transition marker (m=30)
+  s+='<circle cx="'+xPlot(30).toFixed(1)+'" cy="'+yPlot(13).toFixed(1)+'" r="2.5" fill="#f59e0b" opacity="0.9"/>';
+
+  // Label: WITHOUT HYSTERESIS at right end of dashed line
+  s+='<text x="'+(PL+PW+14).toFixed(1)+'" y="'+(yPlot(8)+4).toFixed(1)+'" fill="#3d444d" font-family="SF Mono" font-size="10" letter-spacing="0.12em">WITHOUT HYSTERESIS</text>';
+
+  // Label: THE SCAR · +5.0 pp at right end of gap
+  const scarMidY=(yPlot(13)+yPlot(8))/2;
+  s+='<text x="'+(PL+PW+14).toFixed(1)+'" y="'+(scarMidY+4).toFixed(1)+'" fill="#f59e0b" font-family="SF Mono" font-size="11" letter-spacing="0.12em">THE SCAR · +5.0 pp</text>';
+
+  // Annotation pointing to plateau
+  const platX=(xPlot(30)+xPlot(48))/2;
+  const platY=yPlot(13);
+  const annX=platX-280;
+  const annY=platY-44;
+  s+='<line x1="'+annX.toFixed(1)+'" y1="'+(annY+4).toFixed(1)+'" x2="'+platX.toFixed(1)+'" y2="'+(platY-6).toFixed(1)+'" stroke="#8b949e" stroke-width="0.6" opacity="0.5"/>';
+  s+='<circle cx="'+platX.toFixed(1)+'" cy="'+(platY-6).toFixed(1)+'" r="2" fill="#8b949e" opacity="0.6"/>';
+  s+='<text x="'+annX.toFixed(1)+'" y="'+annY.toFixed(1)+'" fill="#8b949e" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="11" font-style="italic" text-anchor="end">hysteresis: the system remembers</text>';
+
+  // Peak value label
+  s+='<text x="'+(xPlot(18)+10).toFixed(1)+'" y="'+(yPlot(18)-2).toFixed(1)+'" fill="#f59e0b" font-family="SF Mono" font-size="10" opacity="0.95">18.0%</text>';
+  // Plateau value label
+  s+='<text x="'+(xPlot(30)-10).toFixed(1)+'" y="'+(yPlot(13)-8).toFixed(1)+'" fill="#f59e0b" font-family="SF Mono" font-size="10" text-anchor="end" opacity="0.85">13.0%</text>';
+  // Baseline value label
+  s+='<text x="'+(xPlot(6)-10).toFixed(1)+'" y="'+(yPlot(8)-6).toFixed(1)+'" fill="#8b949e" font-family="SF Mono" font-size="10" text-anchor="end" opacity="0.7">8.0%</text>';
+
+  document.getElementById('chart').innerHTML = s;
+})();
+</script>
+</body>
+</html>

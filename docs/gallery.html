@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRISM — Visual System</title>
+<style>
+:root{
+  --bg:#0d1117;
+  --text:#f0f6fc;
+  --secondary:#8b949e;
+  --tertiary:#6e7681;
+  --border:#21262d;
+  --surface:#161b22;
+  --amber:#f59e0b;
+  --nav-bg:rgba(13,17,23,0.72);
+  --dot-color:rgba(245,158,11,0.04);
+}
+[data-theme="light"]{
+  --bg:#ffffff;
+  --text:#1A1A1A;
+  --secondary:#737373;
+  --tertiary:#A3A3A3;
+  --border:#e5e5e5;
+  --surface:#fafafa;
+  --amber:#f59e0b;
+  --nav-bg:rgba(255,255,255,0.72);
+  --dot-color:rgba(0,0,0,0.03);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  transition:background-color 0.25s ease,color 0.25s ease;
+  position:relative;
+  overflow-x:hidden;
+}
+/* Subtle dot-grid background, page-wide */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:radial-gradient(circle,var(--dot-color) 1px,transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ============ NAV ============ */
+nav{
+  position:fixed;
+  top:0;left:0;width:100%;
+  height:56px;
+  background:var(--nav-bg);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  padding:0 32px;
+  z-index:100;
+}
+nav .brand{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+nav .links{
+  display:flex;
+  gap:20px;
+  margin:0 auto;
+  align-items:center;
+}
+nav .links a{
+  font-size:12px;
+  font-family:'SF Mono',monospace;
+  color:var(--secondary);
+  text-decoration:none;
+  letter-spacing:0.05em;
+  transition:color 0.18s ease;
+}
+nav .links a:hover{color:var(--amber)}
+nav .right{display:flex;gap:18px;align-items:center}
+nav .toggle{
+  background:none;
+  border:1px solid var(--border);
+  color:var(--text);
+  cursor:pointer;
+  padding:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:0;
+  transition:border-color 0.18s ease, color 0.18s ease;
+}
+nav .toggle:hover{border-color:var(--amber);color:var(--amber)}
+nav .toggle svg{width:16px;height:16px;display:block}
+nav .toggle .icon-sun{display:none}
+[data-theme="light"] nav .toggle .icon-sun{display:block}
+[data-theme="light"] nav .toggle .icon-moon{display:none}
+nav .gh-link{
+  font-size:12px;
+  font-family:'SF Mono',monospace;
+  color:var(--secondary);
+  text-decoration:none;
+  letter-spacing:0.05em;
+  transition:color 0.18s ease;
+}
+nav .gh-link:hover{color:var(--amber)}
+
+/* ============ HERO ============ */
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  padding:80px 24px 60px;
+  z-index:1;
+}
+.hero .hero-img{
+  max-width:92vw;
+  max-height:62vh;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  display:block;
+}
+.hero .tagline{
+  font-size:14px;
+  color:var(--secondary);
+  margin-top:28px;
+  text-align:center;
+  max-width:600px;
+  letter-spacing:0.01em;
+}
+.hero .scroll-indicator{
+  position:absolute;
+  bottom:32px;
+  left:50%;
+  transform:translateX(-50%);
+  width:1px;
+  height:54px;
+  background:linear-gradient(180deg,transparent 0%,var(--amber) 70%,transparent 100%);
+  opacity:0.6;
+}
+.hero .scroll-indicator::after{
+  content:"";
+  position:absolute;
+  bottom:-2px;
+  left:50%;
+  transform:translateX(-50%) rotate(45deg);
+  width:6px;height:6px;
+  border-right:1px solid var(--amber);
+  border-bottom:1px solid var(--amber);
+}
+
+/* ============ SECTIONS ============ */
+.section{
+  padding:120px 24px;
+  max-width:1100px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+}
+.section .num{
+  font-size:11px;
+  font-family:'SF Mono',monospace;
+  color:var(--amber);
+  letter-spacing:0.2em;
+  text-align:center;
+  display:block;
+}
+.section .title{
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-0.02em;
+  text-align:center;
+  margin-top:14px;
+  color:var(--text);
+}
+.section .subtitle{
+  font-size:14px;
+  color:var(--secondary);
+  text-align:center;
+  max-width:600px;
+  margin:14px auto 0;
+  line-height:1.6;
+}
+.section .image{
+  width:100%;
+  margin-top:48px;
+}
+.section .image img{
+  width:100%;
+  height:auto;
+  display:block;
+}
+.section .caption{
+  font-size:13px;
+  color:var(--secondary);
+  text-align:center;
+  max-width:700px;
+  margin:24px auto 0;
+  line-height:1.7;
+}
+.section .facts{
+  font-size:11px;
+  font-family:'SF Mono',monospace;
+  color:var(--tertiary);
+  text-align:center;
+  letter-spacing:0.1em;
+  margin-top:20px;
+}
+
+/* ============ DIVIDER ============ */
+.divider{
+  height:1px;
+  background:var(--border);
+  opacity:0.6;
+  max-width:1100px;
+  margin:0 auto;
+}
+
+/* ============ FOOTER ============ */
+footer{
+  padding:0 32px;
+  height:80px;
+  border-top:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:relative;
+  z-index:1;
+  background:var(--bg);
+}
+footer .left{
+  font-size:11px;
+  font-family:'SF Mono',monospace;
+  color:var(--tertiary);
+  letter-spacing:0.1em;
+}
+footer .center{
+  display:flex;
+  gap:24px;
+}
+footer .center a{
+  font-size:11px;
+  font-family:'SF Mono',monospace;
+  color:var(--secondary);
+  text-decoration:none;
+  letter-spacing:0.1em;
+  transition:color 0.18s ease;
+}
+footer .center a:hover{color:var(--amber)}
+footer .right{
+  font-size:11px;
+  font-family:'SF Mono',monospace;
+  color:var(--tertiary);
+  letter-spacing:0.1em;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:768px){
+  nav{padding:0 16px;justify-content:space-between}
+  nav .links{display:none}
+  nav .right{margin-left:auto}
+  .section{padding:80px 16px}
+  .hero{padding:80px 16px 60px}
+  .hero .tagline{font-size:13px}
+  .section .title{font-size:22px}
+  .section .subtitle{font-size:13px}
+  .section .caption{font-size:12px}
+  footer{
+    flex-direction:column;
+    justify-content:center;
+    gap:8px;
+    height:auto;
+    padding:20px 16px;
+    text-align:center;
+  }
+  footer .left,footer .right{font-size:10px}
+  footer .center{gap:16px}
+  footer .center a{font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">PRISM</div>
+  <div class="links">
+    <a href="#reactor">Reactor</a>
+    <a href="#neural">Neural</a>
+    <a href="#swarm">Swarm</a>
+    <a href="#causal">Causal</a>
+    <a href="#decree">Decree</a>
+    <a href="#blackswan">Black Swan</a>
+    <a href="#paradigm">Paradigm</a>
+    <a href="#nonlinear">Non-Linear</a>
+    <a href="#hysteresis">Hysteresis</a>
+    <a href="#equilibrium">Equilibrium</a>
+    <a href="#provenance">Provenance</a>
+    <a href="#manifesto">Manifesto</a>
+  </div>
+  <div class="right">
+    <button class="toggle" id="themeToggle" aria-label="Toggle color theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+    </button>
+    <a class="gh-link" href="https://github.com/Vitalcheffe/PRISM" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="banner-v2-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="banner-v2-light.png">
+    <img class="hero-img" data-dark="banner-v2-dark.png" data-light="banner-v2-light.png" src="banner-v2-light.png" alt="PRISM — the complete system in one frame">
+  </picture>
+  <div class="tagline">A non-linear macroeconomic simulator.</div>
+  <div class="scroll-indicator"></div>
+</section>
+
+<!-- 01 — Reactor -->
+<section class="section" id="reactor">
+  <span class="num">01</span>
+  <h2 class="title">The Reactor</h2>
+  <p class="subtitle">47 policy levers as rising prisms. Mid-perturbation.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="reactor-prisms-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="reactor-prisms-light.png">
+      <img data-dark="reactor-prisms-dark.png" data-light="reactor-prisms-light.png" src="reactor-prisms-light.png" alt="The Reactor — 47 policy levers as rising prisms">
+    </picture>
+  </div>
+  <p class="caption">A childhood image made literal: control rods in a nuclear reactor, each one a policy variable. Touch one and the field deforms — neighbors rise, distant rods fall, a causal edge crosses the chamber. The reactor is running.</p>
+  <div class="facts">47 LEVERS · 8 CATEGORIES · LIVE</div>
+</section>
+<div class="divider"></div>
+
+<!-- 02 — Neural -->
+<section class="section" id="neural">
+  <span class="num">02</span>
+  <h2 class="title">Neural Network</h2>
+  <p class="subtitle">47 → 32 → 32 → 15. 3,008 weights. Forward pass, live.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="neural-active-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="neural-active-light.png">
+      <img data-dark="neural-active-dark.png" data-light="neural-active-light.png" src="neural-active-light.png" alt="Neural network — forward pass, 47 to 32 to 32 to 15">
+    </picture>
+  </div>
+  <p class="caption">A dense multilayer perceptron. Every lever feeds every hidden neuron; every hidden neuron feeds every indicator. The bright amber paths are the signal currently propagating — the system computes all 15 indicators in milliseconds, every tick.</p>
+  <div class="facts">3,008 WEIGHTS · ReLU · SGD+MOMENTUM</div>
+</section>
+<div class="divider"></div>
+
+<!-- 03 — Swarm -->
+<section class="section" id="swarm">
+  <span class="num">03</span>
+  <h2 class="title">Agent Swarm</h2>
+  <p class="subtitle">10,000 autonomous agents. 8 factions. Stress hot pockets.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="agent-swarm-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="agent-swarm-light.png">
+      <img data-dark="agent-swarm-dark.png" data-light="agent-swarm-light.png" src="agent-swarm-light.png" alt="Agent swarm — 10,000 agents across 8 factions">
+    </picture>
+  </div>
+  <p class="caption">The country is not a monolith. Ten thousand agents, eight factions, each with trust, stress, capital, and mobility. When stress crosses 0.7 in a cluster, strike risk goes live — and the strain propagates outward to neighboring factions.</p>
+  <div class="facts">10,000 AGENTS · 8 FACTIONS · 9 BEHAVIORS</div>
+</section>
+<div class="divider"></div>
+
+<!-- 04 — Causal -->
+<section class="section" id="causal">
+  <span class="num">04</span>
+  <h2 class="title">Causal Graph</h2>
+  <p class="subtitle">Edges extracted from real World Bank reports by an LLM.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="causal-graph-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="causal-graph-light.png">
+      <img data-dark="causal-graph-dark.png" data-light="causal-graph-light.png" src="causal-graph-light.png" alt="Causal graph — edges extracted from live reports">
+    </picture>
+  </div>
+  <p class="caption">Nothing is hardcoded. An LLM reads World Bank, IMF, and WHO documents and returns quantified causal edges — each carrying a coefficient, a delay, a confidence score, and a provenance URL. Feed it more reports and the graph densifies.</p>
+  <div class="facts">14 NODES · 20 EDGES · LLM-EXTRACTED</div>
+</section>
+<div class="divider"></div>
+
+<!-- 05 — Decree -->
+<section class="section" id="decree">
+  <span class="num">05</span>
+  <h2 class="title">Decree Projection</h2>
+  <p class="subtitle">Type a decree. See 2 years forward. Get a verdict.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="decree-projection-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="decree-projection-light.png">
+      <img data-dark="decree-projection-dark.png" data-light="decree-projection-light.png" src="decree-projection-light.png" alt="Decree projection — 2-year forward projection with verdict">
+    </picture>
+  </div>
+  <p class="caption">Type a decree in French. The engine parses it into lever deltas and simulates twenty-four months forward — GDP, unemployment, debt, life expectancy, HDI. The cost is declared, not hidden. At the end: a verdict. MITIGÉ. FAVORABLE. DÉFAVORABLE.</p>
+  <div class="facts">38 PATTERNS · 24-MONTH PROJECTION · VERDICT ENGINE</div>
+</section>
+<div class="divider"></div>
+
+<!-- 06 — Black Swan -->
+<section class="section" id="blackswan">
+  <span class="num">06</span>
+  <h2 class="title">Black Swan</h2>
+  <p class="subtitle">10 crisis types. Cascading chains. When fragile, three strike at once.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="black-swan-cascade-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="black-swan-cascade-light.png">
+      <img data-dark="black-swan-cascade-dark.png" data-light="black-swan-cascade-light.png" src="black-swan-cascade-light.png" alt="Black swan — cascade chain with conditional probabilities">
+    </picture>
+  </div>
+  <p class="caption">A pandemic triggers a market crash, which raises coup probability, which triggers civil unrest, which causes capital flight. Each arrow carries a conditional probability. When fragility is high, three crises strike at once — and the chain becomes a cascade.</p>
+  <div class="facts">10 CRISIS TYPES · CONDITIONAL CASCADES</div>
+</section>
+<div class="divider"></div>
+
+<!-- 07 — Paradigm -->
+<section class="section" id="paradigm">
+  <span class="num">07</span>
+  <h2 class="title">Paradigm Shift</h2>
+  <p class="subtitle">Switching regime rewrites the weight matrix. Polarity inverts.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="paradigm-shift-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="paradigm-shift-light.png">
+      <img data-dark="paradigm-shift-dark.png" data-light="paradigm-shift-light.png" src="paradigm-shift-light.png" alt="Paradigm shift — weight matrix rewrite">
+    </picture>
+  </div>
+  <p class="caption">The model does not agree with you. Switching paradigm is not a preference — it is a structural rewrite of the causal weight matrix. Interest rates no longer suppress public investment. Subsidies no longer boost growth. Polarity flips. The system computes what follows.</p>
+  <div class="facts">5 REGIMES · WEIGHT MATRIX REWRITE</div>
+</section>
+<div class="divider"></div>
+
+<!-- 08 — Non-Linear Stack -->
+<section class="section" id="nonlinear">
+  <span class="num">08</span>
+  <h2 class="title">Non-Linear Stack</h2>
+  <p class="subtitle">7 layers between the network and the indicators.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="nonlinear-stack-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="nonlinear-stack-light.png">
+      <img data-dark="nonlinear-stack-dark.png" data-light="nonlinear-stack-light.png" src="nonlinear-stack-light.png" alt="Non-linear dynamics — 7 layers">
+    </picture>
+  </div>
+  <p class="caption">Classical neural outputs are smooth. Real economies are not. Seven non-linear transfer functions sit between the raw network and the final indicators: thresholds, bifurcations, hysteresis, feedback, cascades, runaway, equilibrium. The signal transforms as it descends.</p>
+  <div class="facts">7 TRANSFORMS · THRESHOLDS → EQUILIBRIUM</div>
+</section>
+<div class="divider"></div>
+
+<!-- 09 — Hysteresis -->
+<section class="section" id="hysteresis">
+  <span class="num">09</span>
+  <h2 class="title">Hysteresis</h2>
+  <p class="subtitle">Recovery doesn't erase the scar. The system remembers.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="hysteresis-scar-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="hysteresis-scar-light.png">
+      <img data-dark="hysteresis-scar-dark.png" data-light="hysteresis-scar-light.png" src="hysteresis-scar-light.png" alt="Hysteresis — the scar">
+    </picture>
+  </div>
+  <p class="caption">A crisis happens. Unemployment rises to 18%. Recovery begins — but stalls at 13% and plateaus. The system never returns to its pre-crisis baseline. The gap between the dashed reference and the amber trajectory is the scar: five percentage points that do not heal.</p>
+  <div class="facts">MEMORY DECAY τ = 18 MONTHS</div>
+</section>
+<div class="divider"></div>
+
+<!-- 10 — Equilibrium -->
+<section class="section" id="equilibrium">
+  <span class="num">10</span>
+  <h2 class="title">Thermodynamic Equilibrium</h2>
+  <p class="subtitle">Over-optimizing one sector penalizes the whole.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="thermodynamic-balance-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="thermodynamic-balance-light.png">
+      <img data-dark="thermodynamic-balance-dark.png" data-light="thermodynamic-balance-light.png" src="thermodynamic-balance-light.png" alt="Thermodynamic equilibrium — contour landscape">
+    </picture>
+  </div>
+  <p class="caption">The system sits on a fitness landscape. The peak is the theoretical optimum — but the current state is balanced slightly off-center. Push GDP too hard and the system slides downhill into a lower contour. Σ sector fitness is conserved: over-optimizing one penalizes the whole.</p>
+  <div class="facts">5 SECTORS · CONSERVED FITNESS</div>
+</section>
+<div class="divider"></div>
+
+<!-- 11 — Provenance -->
+<section class="section" id="provenance">
+  <span class="num">11</span>
+  <h2 class="title">Data Provenance</h2>
+  <p class="subtitle">Every lever traces to a real source. Zero mock data.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="data-provenance-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="data-provenance-light.png">
+      <img data-dark="data-provenance-dark.png" data-light="data-provenance-light.png" src="data-provenance-light.png" alt="Data provenance — 47 levers, 5 sources">
+    </picture>
+  </div>
+  <p class="caption">Every one of the 47 levers traces to a real publication. World Bank WDI for 23, Loi de Finances for 9, Bank Al-Maghrib for 6, IMF Article IV for 5, UN PAGE for 4. Each lever carries its indicator code, its year, its source URL. Nothing here is invented.</p>
+  <div class="facts">47 LEVERS · 5 SOURCES · WORLD BANK / IMF / BAM</div>
+</section>
+<div class="divider"></div>
+
+<!-- 12 — Manifesto -->
+<section class="section" id="manifesto">
+  <span class="num">12</span>
+  <h2 class="title">Manifesto</h2>
+  <p class="subtitle">Des liens de liens de liens de liens de liens.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="manifesto-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="manifesto-light.png">
+      <img data-dark="manifesto-dark.png" data-light="manifesto-light.png" src="manifesto-light.png" alt="Manifesto — recursive causal chain">
+    </picture>
+  </div>
+  <p class="caption">Two atoms at the center, almost touching. From them, edges radiate outward — six, then fourteen, then thirty, then sixty. The outermost nodes are tiny and dim, fading into the distance. Four bright edges mark active chain reactions. This is the dream, rendered.</p>
+  <div class="facts">47 → 10,000 → ∞</div>
+</section>
+<div class="divider"></div>
+
+<!-- 13 — Architecture -->
+<section class="section" id="architecture">
+  <span class="num">13</span>
+  <h2 class="title">Architecture</h2>
+  <p class="subtitle">The 6-layer pipeline, end to end.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="architecture-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="architecture-light.png">
+      <img data-dark="architecture-dark.png" data-light="architecture-light.png" src="architecture-light.png" alt="PRISM architecture — 6-layer pipeline">
+    </picture>
+  </div>
+  <p class="caption">NLP extracts causal edges from real reports. The neural network forward-passes 47 levers into 15 indicators. Seven non-linear layers transform the signal. The agent swarm reacts. The black-swan engine cascades. Visualization renders it all, every tick.</p>
+  <div class="facts">NLP · NN · NONLINEAR · SWARM · BLACKSWAN · VIZ</div>
+</section>
+
+<footer>
+  <div class="left">PRISM · MIT License</div>
+  <div class="center">
+    <a href="../RESEARCH.md" target="_blank">RESEARCH.md ↗</a>
+    <a href="../NOTES.md" target="_blank">NOTES.md ↗</a>
+    <a href="https://github.com/Vitalcheffe/PRISM" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+  <div class="right">v1.0</div>
+</footer>
+
+<script>
+(function(){
+  const root = document.documentElement;
+  const toggle = document.getElementById('themeToggle');
+  const STORAGE_KEY = 'prism-gallery-theme';
+
+  function applyTheme(theme){
+    root.setAttribute('data-theme', theme);
+    // Swap every image that has data-dark/data-light attributes
+    document.querySelectorAll('img[data-dark]').forEach(img => {
+      const target = img.getAttribute('data-' + theme);
+      if(target) img.src = target;
+    });
+  }
+
+  // Initialize: localStorage > system preference > default (dark)
+  const saved = localStorage.getItem(STORAGE_KEY);
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialTheme = saved || (systemDark ? 'dark' : 'light');
+  applyTheme(initialTheme);
+
+  toggle.addEventListener('click', () => {
+    const current = root.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem(STORAGE_KEY, next);
+  });
+
+  // If user has not explicitly chosen, follow system changes live
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if(!localStorage.getItem(STORAGE_KEY)){
+      applyTheme(e.matches ? 'dark' : 'light');
+    }
+  });
+})();
+</script>
+</body>
+</html>
