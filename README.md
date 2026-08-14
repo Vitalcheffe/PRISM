@@ -2,11 +2,19 @@
 
 A non-linear macroeconomic simulator. 47 real policy levers feed a 3,008-weight neural network that computes 15 economic indicators. 10,000 autonomous agents across 8 political factions react in real time. Causal relationships are extracted from live World Bank and IMF reports by an LLM — not hardcoded.
 
-![PRISM](docs/banner.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/banner-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/banner-light.png">
+  <img alt="PRISM" src="docs/banner-light.png" width="100%">
+</picture>
 
 ## Architecture
 
-![Architecture](docs/architecture.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/architecture-light.png">
+  <img alt="Architecture" src="docs/architecture-light.png" width="100%">
+</picture>
 
 The engine processes data through six layers. Each layer transforms its input without hardcoded rules — the system learns causal relationships from real documents and computes indicators via a trained neural network.
 
