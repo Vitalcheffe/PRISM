@@ -3,18 +3,79 @@
 A non-linear macroeconomic simulator. 47 real policy levers feed a 3,008-weight neural network that computes 15 economic indicators. 10,000 autonomous agents across 8 political factions react in real time. Causal relationships are extracted from live World Bank and IMF reports by an LLM — not hardcoded.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/banner-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="docs/banner-light.png">
-  <img alt="PRISM" src="docs/banner-light.png" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/banner-v2-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/banner-v2-light.png">
+  <img alt="PRISM" src="docs/banner-v2-light.png" width="100%">
 </picture>
 
 ## The reactor
 
-47 policy levers, grouped into 8 categories, rising like prisms from a baseline. Each prism's height encodes its current value. When you adjust one, the neural network recomputes all 15 indicators, agents react, and the prisms shift in real time.
+47 policy levers, grouped into 8 categories, rising like prisms from a baseline. Each prism's height encodes its current value. When you adjust one, the neural network recomputes all 15 indicators, agents react, and the prisms shift in real time. The bright prisms below are mid-perturbation — a value just changed, and the causal edges are propagating outward.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/reactor-dark.png">
-  <img alt="The Reactor" src="docs/reactor-dark.png" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/reactor-prisms-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/reactor-prisms-light.png">
+  <img alt="The Reactor — 47 levers as rising prisms" src="docs/reactor-prisms-light.png" width="100%">
+</picture>
+
+## The neural network
+
+A custom MLP, 47 → 32 → 32 → 15, implemented in TypeScript with no TensorFlow or PyTorch. 3,008 learnable weights. ReLU activations, He initialization, SGD with momentum. The bright paths below are the active signal propagating through the network on a live forward pass. The output nodes with radial glows are the indicators currently being computed.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/neural-active-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/neural-active-light.png">
+  <img alt="Neural network — forward pass" src="docs/neural-active-light.png" width="100%">
+</picture>
+
+## The agent swarm
+
+10,000 autonomous agents, 8 factions: labor, employers, military, clergy, youth, rural, urban elite, informal economy. Each agent carries trust, stress, capital, and mobility. When stress crosses a threshold, agents strike, riot, or rebel. The hot pockets below are factions where stress has crossed 0.7 — strike risk is live.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/agent-swarm-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/agent-swarm-light.png">
+  <img alt="Agent swarm — 10,000 agents across 8 factions" src="docs/agent-swarm-light.png" width="100%">
+</picture>
+
+## The causal graph
+
+Every edge below was extracted from a real World Bank or IMF document by an LLM. Each edge carries a coefficient (−1 to +1), a delay in months, a confidence score, and a provenance URL. Nothing is hardcoded. Feed the system more reports and the graph grows denser.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/causal-graph-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/causal-graph-light.png">
+  <img alt="Causal graph — LLM-extracted edges" src="docs/causal-graph-light.png" width="100%">
+</picture>
+
+## The decree engine
+
+Type a decree in French. The system parses it, identifies the affected levers, calculates the fiscal cost, and simulates 2 years forward. The projection below shows five indicator trajectories after the decree lands. The verdict engine returns one of four classifications: favorable, mitigé, défavorable, or catastrophique.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/decree-projection-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/decree-projection-light.png">
+  <img alt="Decree — 2-year projection with verdict" src="docs/decree-projection-light.png" width="100%">
+</picture>
+
+## Black swan events
+
+Ten crisis types strike stochastically: pandemic, earthquake, market crash, coup, drought, cyberattack, refugee crisis, oil shock, harvest failure, diplomatic crisis. Each one can trigger cascading chains. When the system is fragile, up to three crises hit simultaneously. The chain below is the engine's live output when fragility is high — each arrow carries a conditional probability.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/black-swan-cascade-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/black-swan-cascade-light.png">
+  <img alt="Black swan — cascade chain" src="docs/black-swan-cascade-light.png" width="100%">
+</picture>
+
+## The paradigm engine
+
+Switching political regime doesn't just change parameters. It rewrites the causal weight matrix and flips edge polarities. Under a planned economy, raising interest rates no longer suppresses public investment — the state invests regardless. Five regimes are available: Liberalism, Planned, Technocracy, Authoritarian, Transition. The matrix below is mid-rewrite — the transition front is moving left to right.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/paradigm-shift-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/paradigm-shift-light.png">
+  <img alt="Paradigm — weight matrix rewrite" src="docs/paradigm-shift-light.png" width="100%">
 </picture>
 
 ## Architecture
@@ -31,7 +92,7 @@ The engine processes data through six layers. Each layer transforms its input wi
 
 You pick a policy lever — say, the VAT rate. You drag it from 20% to 25%. The neural network forward-passes the new lever vector and produces updated values for GDP, unemployment, inflation, debt-to-GDP, life expectancy, HDI, Gini, and seven other indicators. These aren't formulas — they're learned weights that approximate the economic relationships discovered in real data.
 
-Meanwhile, 10,000 agents across 8 factions (labor unions, employers, military, clergy, youth, rural, urban elite, informal economy) update their trust, stress, and behavior. If stress crosses a threshold, agents start striking, rioting, or rebelling. The system detects political threats: coup risk, civil war probability, revolution likelihood.
+Meanwhile, 10,000 agents across 8 factions update their trust, stress, and behavior. If stress crosses a threshold, agents start striking, rioting, or rebelling. The system detects political threats: coup risk, civil war probability, revolution likelihood.
 
 Seven layers of non-linearity sit between the neural network output and the final indicators:
 
@@ -52,7 +113,7 @@ POST /api/causal/extract
 { "url": "https://www.worldbank.org/en/country/morocco/overview" }
 ```
 
-The LLM analyzes the document, identifies variable pairs, and quantifies each relationship with a coefficient (-1 to +1), a delay in months, a confidence score, and a rationale. The extracted edge is persisted to SQLite. The more documents you feed it, the richer the causal graph becomes.
+The LLM analyzes the document, identifies variable pairs, and quantifies each relationship with a coefficient (−1 to +1), a delay in months, a confidence score, and a rationale. The extracted edge is persisted to SQLite. The more documents you feed it, the richer the causal graph becomes.
 
 Example extraction from a World Bank report:
 
@@ -63,14 +124,6 @@ public_investment → gdp_growth
   confidence: 80%
   rationale: "Public investment stimulates medium-term growth"
 ```
-
-## Black swan events
-
-Ten crisis types strike stochastically: pandemic, earthquake, market crash, coup, drought, cyberattack, refugee crisis, oil shock, harvest failure, diplomatic crisis. Each one can trigger cascading chains — a pandemic may cause a market crash, which may trigger a coup. When the system is fragile, up to three crises hit simultaneously.
-
-## Paradigm engine
-
-Switching political regime doesn't just change parameters. It rewrites the causal weight matrix and flips edge polarities. Under a planned economy, raising interest rates no longer suppresses public investment — the state invests regardless. Five regimes are available: Liberalism, Planned, Technocracy, Authoritarian, Transition.
 
 ## Decree system
 
@@ -94,6 +147,10 @@ All 47 baseline values are real. Sources:
 - Bank Al-Maghrib
 - IMF Article IV Consultation
 - UN PAGE Morocco
+
+## Research methodology
+
+The full mathematical formalism, computational architecture, validation framework, and limitations are documented in [RESEARCH.md](./RESEARCH.md). It covers the neural network equations, the seven non-linear layers, the agent swarm update rules, the causal extraction pipeline, and a comparison with DSGE and DCGE models. The original design notes, preserved word-for-word and progressively visualized, are in [NOTES.md](./NOTES.md).
 
 ## Run it
 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:800px;background:#0d1117;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1px,transparent 1px);background-size:32px 32px}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.label{position:absolute;top:36px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.label h2{font-size:13px;color:#8b949e;letter-spacing:0.25em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.label p{font-size:11px;color:#3d444d;margin-top:6px;font-family:'SF Mono',monospace;letter-spacing:0.05em}
+.graph-wrap{position:absolute;top:90px;left:50%;transform:translateX(-50%);z-index:1}
+.meta{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:9px;color:#3d444d;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+
+<div class="label">
+<h2>Causal Graph — Extracted From Live Reports</h2>
+<p>14 variables · 20 edges · LLM-extracted · persisted to SQLite</p>
+</div>
+
+<div class="graph-wrap" id="graph-container"></div>
+
+<div class="meta">PRISM / CAUSAL / 4 SOURCES · LAST EXTRACTION 12m AGO</div>
+</div>
+
+<script>
+(function(){
+  // 14 variable nodes — positions look organic but balanced
+  const nodes=[
+    {name:'tax_revenue',color:'#f59e0b',x:180,y:60,w:77},
+    {name:'interest_rate',color:'#f59e0b',x:240,y:300,w:91},
+    {name:'public_investment',color:'#f59e0b',x:380,y:460,w:112},
+    {name:'debt_to_gdp',color:'#f59e0b',x:480,y:220,w:84},
+    {name:'gdp_growth',color:'#f59e0b',x:560,y:60,w:70},
+    {name:'inflation',color:'#f59e0b',x:770,y:160,w:63},
+    {name:'hospital_beds',color:'#f43f5e',x:720,y:380,w:91},
+    {name:'life_expectancy',color:'#f43f5e',x:940,y:460,w:105},
+    {name:'unemployment',color:'#eab308',x:980,y:60,w:91},
+    {name:'school_enrollment',color:'#10b981',x:1200,y:300,w:119},
+    {name:'informal_share',color:'#eab308',x:1180,y:560,w:98},
+    {name:'hdi',color:'#10b981',x:1430,y:120,w:28},
+    {name:'exchange_rate',color:'#f59e0b',x:1380,y:420,w:91},
+    {name:'foreign_direct_investment',color:'#f59e0b',x:1450,y:560,w:168}
+  ];
+
+  // 20 directed edges (from, to, coef, highlight, provenance)
+  const edges=[
+    {f:0,t:2,c:+0.5,h:false},
+    {f:0,t:3,c:-0.4,h:false},
+    {f:1,t:5,c:-0.6,h:true,p:'src: worldbank.org/morocco/overview · conf 75%'},
+    {f:1,t:2,c:-0.3,h:false},
+    {f:2,t:4,c:+0.7,h:true,p:'src: imf.org/ma/article-iv · conf 80%'},
+    {f:4,t:8,c:-0.5,h:false},
+    {f:4,t:3,c:-0.4,h:false},
+    {f:5,t:12,c:-0.4,h:false},
+    {f:5,t:8,c:+0.3,h:false},
+    {f:3,t:1,c:+0.4,h:false},
+    {f:6,t:7,c:+0.6,h:true,p:'src: who.int/countries/mar · conf 78%'},
+    {f:6,t:11,c:+0.2,h:false},
+    {f:7,t:11,c:+0.4,h:false},
+    {f:9,t:11,c:+0.7,h:true,p:'src: worldbank.org/education · conf 82%'},
+    {f:8,t:10,c:+0.5,h:false},
+    {f:10,t:0,c:-0.6,h:false},
+    {f:13,t:4,c:+0.5,h:false},
+    {f:13,t:12,c:+0.3,h:false},
+    {f:4,t:13,c:+0.3,h:false},
+    {f:8,t:7,c:-0.3,h:false}
+  ];
+
+  let s='<svg width="1600" height="660" viewBox="0 0 1600 660">';
+  s+='<defs>';
+  s+='<marker id="ap" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" fill="rgba(245,158,11,0.5)"/></marker>';
+  s+='<marker id="an" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" fill="rgba(244,63,94,0.5)"/></marker>';
+  s+='<marker id="aph" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" fill="#f59e0b"/></marker>';
+  s+='<marker id="anh" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" fill="#f43f5e"/></marker>';
+  s+='<filter id="edgeglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.5"/></filter>';
+  s+='</defs>';
+
+  // Draw edges
+  for(const e of edges){
+    const src=nodes[e.f], tgt=nodes[e.t];
+    const dx=tgt.x-src.x, dy=tgt.y-src.y;
+    const len=Math.sqrt(dx*dx+dy*dy);
+    const ux=dx/len, uy=dy/len;
+    const srcOff=src.w/2+10;
+    const tgtOff=tgt.w/2+10;
+    const sx=src.x+ux*srcOff, sy=src.y+uy*srcOff;
+    const ex=tgt.x-ux*tgtOff, ey=tgt.y-uy*tgtOff;
+    const mx=(sx+ex)/2, my=(sy+ey)/2;
+    const px=-uy*22, py=ux*22;
+    const cx=mx+px, cy=my+py;
+    const pos=e.c>0;
+    const color=pos?'#f59e0b':'#f43f5e';
+    const marker='url(#'+(pos?(e.h?'aph':'ap'):(e.h?'anh':'an'))+')';
+
+    if(e.h){
+      // Glow underlay
+      s+='<path d="M '+sx.toFixed(1)+' '+sy.toFixed(1)+' Q '+cx.toFixed(1)+' '+cy.toFixed(1)+' '+ex.toFixed(1)+' '+ey.toFixed(1)+'" fill="none" stroke="'+color+'" stroke-width="3" opacity="0.25" filter="url(#edgeglow)"/>';
+      s+='<path d="M '+sx.toFixed(1)+' '+sy.toFixed(1)+' Q '+cx.toFixed(1)+' '+cy.toFixed(1)+' '+ex.toFixed(1)+' '+ey.toFixed(1)+'" fill="none" stroke="'+color+'" stroke-width="1.5" opacity="1" marker-end="'+marker+'"/>';
+    } else {
+      const op=0.22+Math.abs(e.c)*0.08;
+      const w=0.5+Math.abs(e.c)*1.2;
+      s+='<path d="M '+sx.toFixed(1)+' '+sy.toFixed(1)+' Q '+cx.toFixed(1)+' '+cy.toFixed(1)+' '+ex.toFixed(1)+' '+ey.toFixed(1)+'" fill="none" stroke="'+color+'" stroke-width="'+w.toFixed(2)+'" opacity="'+op.toFixed(2)+'" marker-end="'+marker+'"/>';
+    }
+
+    // Coefficient label
+    const labelX=cx, labelY=cy-4;
+    const coefColor=pos?'#10b981':'#f43f5e';
+    const coefText=(pos?'+':'')+e.c.toFixed(1);
+    s+='<text x="'+labelX.toFixed(1)+'" y="'+labelY.toFixed(1)+'" fill="'+coefColor+'" font-family="SF Mono" font-size="9" text-anchor="middle" opacity="'+(e.h?1:0.7)+'">'+coefText+'</text>';
+
+    // Provenance tag for highlighted edges
+    if(e.h && e.p){
+      s+='<text x="'+labelX.toFixed(1)+'" y="'+(labelY+12).toFixed(1)+'" fill="#3d444d" font-family="SF Mono" font-size="8" text-anchor="middle" opacity="0.8">'+e.p+'</text>';
+    }
+  }
+
+  // Draw nodes on top
+  for(const n of nodes){
+    s+='<circle cx="'+(n.x-n.w/2-8).toFixed(1)+'" cy="'+n.y+'" r="3" fill="'+n.color+'"/>';
+    s+='<text x="'+n.x+'" y="'+(n.y+4)+'" fill="#f0f6fc" font-family="SF Mono" font-size="11" text-anchor="middle">'+n.name+'</text>';
+  }
+
+  s+='</svg>';
+  document.getElementById('graph-container').innerHTML=s;
+})();
+</script>
+</body>
+</html>

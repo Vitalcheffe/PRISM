@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:800px;background:#0d1117;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1px,transparent 1px);background-size:32px 32px}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.label{position:absolute;top:40px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.label h2{font-size:13px;color:#8b949e;letter-spacing:0.25em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.label p{font-size:11px;color:#3d444d;margin-top:6px;font-family:'SF Mono',monospace;letter-spacing:0.05em}
+.net-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1}
+.meta{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:9px;color:#3d444d;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+
+<div class="label">
+<h2>Neural Network — Forward Pass</h2>
+<p>47 → 32 → 32 → 15 · 3,008 weights · ReLU · He init</p>
+</div>
+
+<div class="net-wrap" id="net-container"></div>
+
+<div class="meta">PRISM / MLP / SGD+MOMENTUM · LOSS 0.0142</div>
+</div>
+
+<script>
+(function(){
+  const inputN=47, h1N=32, h2N=32, outN=15;
+  const xInput=175, xH1=525, xH2=875, xOut=1225;
+  const yStart=50, yEnd=570;
+  const inputY=[], h1Y=[], h2Y=[], outY=[];
+  for(let i=0;i<inputN;i++) inputY[i]=yStart+i*(yEnd-yStart)/(inputN-1);
+  for(let i=0;i<h1N;i++) h1Y[i]=yStart+i*(yEnd-yStart)/(h1N-1);
+  for(let i=0;i<h2N;i++) h2Y[i]=yStart+i*(yEnd-yStart)/(h2N-1);
+  for(let i=0;i<outN;i++) outY[i]=yStart+i*(yEnd-yStart)/(outN-1);
+
+  const cats=['#f59e0b','#f43f5e','#10b981','#f97316','#a855f7','#84cc16','#eab308','#06b6d4'];
+  function inputColor(i){return cats[Math.floor(i/6)%8];}
+
+  let s='<svg width="1400" height="660" viewBox="0 0 1400 660">';
+  s+='<defs><filter id="lineglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter></defs>';
+
+  // Dense mesh: input→hidden1 (1.2% opacity)
+  for(let i=0;i<inputN;i++){
+    for(let j=0;j<h1N;j++){
+      s+='<line x1="'+xInput+'" y1="'+inputY[i].toFixed(2)+'" x2="'+xH1+'" y2="'+h1Y[j].toFixed(2)+'" stroke="rgba(245,158,11,0.012)" stroke-width="0.4"/>';
+    }
+  }
+  // Dense mesh: hidden1→hidden2 (1.2% opacity)
+  for(let i=0;i<h1N;i++){
+    for(let j=0;j<h2N;j++){
+      s+='<line x1="'+xH1+'" y1="'+h1Y[i].toFixed(2)+'" x2="'+xH2+'" y2="'+h2Y[j].toFixed(2)+'" stroke="rgba(245,158,11,0.012)" stroke-width="0.4"/>';
+    }
+  }
+  // hidden2→output: 3 strongest per output (10% opacity, amber-tinted)
+  for(let o=0;o<outN;o++){
+    const picks=[(o*7+3)%h2N,(o*11+5)%h2N,(o*13+7)%h2N];
+    for(const p of picks){
+      s+='<line x1="'+xH2+'" y1="'+h2Y[p].toFixed(2)+'" x2="'+xOut+'" y2="'+outY[o].toFixed(2)+'" stroke="rgba(245,158,11,0.1)" stroke-width="0.7"/>';
+    }
+  }
+
+  // 5 BRIGHT signal lines (60% opacity, with glow filter)
+  const bright=[
+    [xInput,inputY[21],xH1,h1Y[10]],
+    [xInput,inputY[22],xH1,h1Y[10]],
+    [xH1,h1Y[10],xH2,h2Y[15]],
+    [xH2,h2Y[15],xOut,outY[4]],
+    [xH2,h2Y[15],xOut,outY[11]]
+  ];
+  for(const b of bright){
+    s+='<line x1="'+b[0]+'" y1="'+b[1].toFixed(2)+'" x2="'+b[2]+'" y2="'+b[3].toFixed(2)+'" stroke="#f59e0b" stroke-width="2" opacity="0.25" filter="url(#lineglow)"/>';
+    s+='<line x1="'+b[0]+'" y1="'+b[1].toFixed(2)+'" x2="'+b[2]+'" y2="'+b[3].toFixed(2)+'" stroke="#f59e0b" stroke-width="1.2" opacity="0.85"/>';
+  }
+
+  // Perturbed input cluster glow (inputs #21, #22, #23)
+  for(const i of [21,22,23]){
+    s+='<circle cx="'+xInput+'" cy="'+inputY[i].toFixed(2)+'" r="10" fill="'+inputColor(i)+'" opacity="0.18"/>';
+    s+='<circle cx="'+xInput+'" cy="'+inputY[i].toFixed(2)+'" r="6" fill="'+inputColor(i)+'" opacity="0.25"/>';
+  }
+
+  // Input nodes (4px, category color)
+  for(let i=0;i<inputN;i++){
+    const op=(i===21||i===22||i===23)?1:0.55;
+    s+='<circle cx="'+xInput+'" cy="'+inputY[i].toFixed(2)+'" r="2" fill="'+inputColor(i)+'" opacity="'+op+'"/>';
+  }
+  // Hidden-1 nodes (6px, amber-tinted)
+  for(let i=0;i<h1N;i++){
+    const op=(i===10)?1:0.45;
+    s+='<circle cx="'+xH1+'" cy="'+h1Y[i].toFixed(2)+'" r="3" fill="#f59e0b" opacity="'+op+'"/>';
+  }
+  // Hidden-2 nodes
+  for(let i=0;i<h2N;i++){
+    const op=(i===15)?1:0.45;
+    s+='<circle cx="'+xH2+'" cy="'+h2Y[i].toFixed(2)+'" r="3" fill="#f59e0b" opacity="'+op+'"/>';
+  }
+  // Output nodes (8px, brightness by simulated activation)
+  const acts=[0.35,0.55,0.4,0.25,1.0,0.6,0.4,0.3,0.5,0.7,0.45,1.0,0.5,0.35,0.6];
+  for(let i=0;i<outN;i++){
+    s+='<circle cx="'+xOut+'" cy="'+outY[i].toFixed(2)+'" r="4" fill="#f59e0b" opacity="'+acts[i]+'"/>';
+  }
+  // Pulsing glows on outputs #4 and #11 (concentric circles)
+  for(const idx of [4,11]){
+    s+='<circle cx="'+xOut+'" cy="'+outY[idx].toFixed(2)+'" r="32" fill="rgba(245,158,11,0.04)"/>';
+    s+='<circle cx="'+xOut+'" cy="'+outY[idx].toFixed(2)+'" r="22" fill="none" stroke="rgba(245,158,11,0.18)" stroke-width="0.5"/>';
+    s+='<circle cx="'+xOut+'" cy="'+outY[idx].toFixed(2)+'" r="14" fill="none" stroke="rgba(245,158,11,0.35)" stroke-width="0.6"/>';
+    s+='<circle cx="'+xOut+'" cy="'+outY[idx].toFixed(2)+'" r="8" fill="none" stroke="rgba(245,158,11,0.6)" stroke-width="0.7"/>';
+  }
+
+  // Layer labels
+  s+='<text x="'+xInput+'" y="625" fill="#3d444d" font-family="SF Mono" font-size="9" text-anchor="middle" letter-spacing="2">INPUT (47)</text>';
+  s+='<text x="'+xH1+'" y="625" fill="#3d444d" font-family="SF Mono" font-size="9" text-anchor="middle" letter-spacing="2">HIDDEN-1 (32)</text>';
+  s+='<text x="'+xH2+'" y="625" fill="#3d444d" font-family="SF Mono" font-size="9" text-anchor="middle" letter-spacing="2">HIDDEN-2 (32)</text>';
+  s+='<text x="'+xOut+'" y="625" fill="#3d444d" font-family="SF Mono" font-size="9" text-anchor="middle" letter-spacing="2">OUTPUT (15)</text>';
+
+  s+='</svg>';
+  document.getElementById('net-container').innerHTML=s;
+})();
+</script>
+</body>
+</html>

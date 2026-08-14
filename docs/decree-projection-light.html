@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:760px;background:#ffffff;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.035) 1px,transparent 1px);background-size:32px 32px}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.title-block{position:absolute;top:32px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.title-block h2{font-size:13px;color:#737373;letter-spacing:0.25em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.title-block p{font-size:11px;color:#A3A3A3;margin-top:6px;font-family:'SF Mono',monospace;letter-spacing:0.05em}
+.halves{position:absolute;top:96px;left:0;width:100%;height:580px;display:flex}
+.left-half{width:960px;display:flex;align-items:center;justify-content:center}
+.right-half{width:960px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+.decree-block{text-align:center;width:560px}
+.decree-label{font-size:10px;color:#A3A3A3;letter-spacing:0.2em;font-family:'SF Mono',monospace}
+.decree-quote{font-size:24px;color:#1A1A1A;margin-top:24px;line-height:1.4;font-weight:400}
+.decree-table{margin-top:54px;font-family:'SF Mono',monospace;font-size:12px}
+.decree-table .row{display:flex;justify-content:space-between;padding:8px 32px;color:#737373}
+.decree-table .row .val{color:#1A1A1A}
+.decree-table .row.cost .val{color:#f59e0b}
+.verdict{font-size:14px;color:#f59e0b;letter-spacing:0.15em;font-family:'SF Mono',monospace}
+.meta{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:9px;color:#D4D4D4;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+
+<div class="title-block">
+<h2>Decree — 2-Year Projection</h2>
+<p>NLP-parsed · 39 decree patterns · forward-simulated · verdict engine</p>
+</div>
+
+<div class="halves">
+  <div class="left-half">
+    <div class="decree-block">
+      <div class="decree-label">DÉCRET</div>
+      <div class="decree-quote">"Construire 10 hôpitaux et recruter 5 000 médecins"</div>
+      <div class="decree-table">
+        <div class="row"><span>hospital_beds</span><span class="val">+0.13</span></div>
+        <div class="row"><span>healthcare_workers</span><span class="val">+0.08</span></div>
+        <div class="row"><span>public_spending</span><span class="val">+0.21</span></div>
+        <div class="row cost"><span>fiscal_cost</span><span class="val">1.5 Mrd MAD</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="right-half">
+    <div class="chart-container" id="chart-container"></div>
+    <div class="verdict">VERDICT: MITIGÉ</div>
+  </div>
+</div>
+
+<div class="meta">PRISM / DECREES / PROJECTION 24M · COST 1.5 MRD MAD</div>
+</div>
+
+<script>
+(function(){
+  const months=[0,4,8,12,16,20,24];
+  const lines=[
+    {name:'life_expectancy',color:'#10b981',values:[0.40,0.45,0.52,0.58,0.64,0.70,0.75],final:'78.4 yrs'},
+    {name:'public_debt',color:'#f43f5e',values:[0.30,0.40,0.52,0.63,0.72,0.80,0.85],final:'82.1% GDP'},
+    {name:'gdp_growth',color:'#f59e0b',values:[0.60,0.42,0.30,0.38,0.46,0.52,0.55],final:'+3.2%'},
+    {name:'unemployment',color:'#a855f7',values:[0.35,0.38,0.42,0.45,0.47,0.49,0.50],final:'11.4%'},
+    {name:'hdi',color:'#06b6d4',values:[0.50,0.52,0.55,0.58,0.62,0.66,0.70],final:'0.712'}
+  ];
+
+  const W=600, H=340;
+  const pl=40, pr=510, pt=30, pb=290;
+  const pw=pr-pl, ph=pb-pt;
+
+  function pathFromVals(vals){
+    const pts=months.map((m,i)=>({x:pl+(m/24)*pw, y:pb-vals[i]*ph}));
+    let d='M '+pts[0].x.toFixed(1)+','+pts[0].y.toFixed(1);
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[i-1]||pts[i];
+      const p1=pts[i];
+      const p2=pts[i+1];
+      const p3=pts[i+2]||p2;
+      const t=0.5;
+      const c1x=p1.x+(p2.x-p0.x)*t/6;
+      const c1y=p1.y+(p2.y-p0.y)*t/6;
+      const c2x=p2.x-(p3.x-p1.x)*t/6;
+      const c2y=p2.y-(p3.y-p1.y)*t/6;
+      d+=' C '+c1x.toFixed(1)+','+c1y.toFixed(1)+' '+c2x.toFixed(1)+','+c2y.toFixed(1)+' '+p2.x.toFixed(1)+','+p2.y.toFixed(1);
+    }
+    return d;
+  }
+
+  let s='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">';
+
+  const shockW=(6/24)*pw;
+  s+='<rect x="'+pl+'" y="'+pt+'" width="'+shockW.toFixed(1)+'" height="'+ph+'" fill="rgba(245,158,11,0.06)"/>';
+  s+='<text x="'+(pl+shockW/2).toFixed(1)+'" y="'+(pt+14)+'" fill="#A3A3A3" font-family="SF Mono" font-size="9" text-anchor="middle" letter-spacing="2">SHOCK</text>';
+
+  s+='<line x1="'+pl+'" y1="'+pb+'" x2="'+pr+'" y2="'+pb+'" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>';
+  s+='<line x1="'+pl+'" y1="'+pt+'" x2="'+pl+'" y2="'+pb+'" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>';
+
+  s+='<line x1="'+pl+'" y1="'+pt+'" x2="'+pl+'" y2="'+pb+'" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3" opacity="0.8"/>';
+  s+='<text x="'+(pl-4)+'" y="'+(pt-8)+'" fill="#f59e0b" font-family="SF Mono" font-size="10" text-anchor="end" letter-spacing="1">DÉCRET</text>';
+
+  for(let m=0;m<=24;m+=6){
+    const x=pl+(m/24)*pw;
+    s+='<text x="'+x.toFixed(1)+'" y="'+(pb+18)+'" fill="#A3A3A3" font-family="SF Mono" font-size="9" text-anchor="middle">'+m+'M</text>';
+  }
+
+  for(const line of lines){
+    const d=pathFromVals(line.values);
+    s+='<path d="'+d+'" fill="none" stroke="'+line.color+'" stroke-width="1.6" opacity="0.9"/>';
+    const finalY=pb-line.values[line.values.length-1]*ph;
+    s+='<text x="'+(pr+8)+'" y="'+(finalY+3).toFixed(1)+'" fill="'+line.color+'" font-family="SF Mono" font-size="10" text-anchor="start">'+line.final+'</text>';
+    s+='<circle cx="'+pr+'" cy="'+finalY.toFixed(1)+'" r="2.5" fill="'+line.color+'"/>';
+  }
+
+  s+='</svg>';
+  document.getElementById('chart-container').innerHTML=s;
+})();
+</script>
+</body>
+</html>
