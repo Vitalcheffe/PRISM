@@ -283,23 +283,23 @@ export function ForceGraph() {
 
             if (l.kind === "causal") {
               stroke = l.coefficient > 0 ? "var(--ink)" : "var(--state-tension)";
-              width = Math.max(0.4, Math.min(1.5, Math.abs(l.coefficient) * 1.5));
-              opacity = 0.12;
+              width = Math.max(0.3, Math.min(1, Math.abs(l.coefficient) * 1));
+              opacity = 0.06;
             } else if (l.kind === "spoke") {
               stroke = "var(--rule-strong)";
-              width = 0.4;
-              opacity = 0.1;
+              width = 0.3;
+              opacity = 0.04;
             } else {
               stroke = "var(--rule-strong)";
-              width = 0.3;
-              opacity = 0.08;
+              width = 0.2;
+              opacity = 0.03;
             }
 
             if (isActive) {
-              opacity = 0.8;
+              opacity = 0.7;
               width = Math.max(width, 1);
             }
-            if (isDimmed) opacity = 0.03;
+            if (isDimmed) opacity = 0.01;
             if (isRipple) {
               opacity = 1;
               width = 1.5;
@@ -340,11 +340,10 @@ export function ForceGraph() {
                 onMouseEnter={node.kind === "lever" ? () => setHoveredId(node.id) : undefined}
                 onMouseLeave={node.kind === "lever" ? () => setHoveredId(null) : undefined}
               >
-                {/* Anneau pour le nœud pays (atmosphère de planète) */}
+                {/* Anneau pour le nœud pays */}
                 {isCountry && (
                   <>
-                    <circle r={r + 8} fill="none" stroke="var(--rule)" strokeWidth={0.5} strokeDasharray="2 3" />
-                    <circle r={r + 4} fill="none" stroke="var(--rule-strong)" strokeWidth={0.5} />
+                    <circle r={r + 6} fill="none" stroke="var(--rule)" strokeWidth={0.4} strokeDasharray="1 4" />
                   </>
                 )}
                 {/* Halo pour nœud actif */}

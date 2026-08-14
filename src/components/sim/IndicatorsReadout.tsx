@@ -52,27 +52,27 @@ function StabilityGauge() {
   const pct = Math.max(0, Math.min(100, value));
 
   return (
-    <section className="px-3 pt-3 pb-2.5 border-b border-[var(--rule)]">
+    <section className="px-4 pt-4 pb-3 border-b border-[var(--rule)]">
       <h3
-        className="font-mono uppercase tracking-wider text-[var(--ink-mute)] mb-1"
-        style={{ fontSize: 9 }}
+        className="font-mono uppercase text-[var(--ink-mute)] mb-1.5"
+        style={{ fontSize: 9, letterSpacing: "0.12em" }}
       >
-        Stabilité globale
+        Stabilité
       </h3>
-      <div className="flex items-baseline gap-2">
+      <div className="flex items-baseline gap-1.5">
         <span
-          className="font-mono font-semibold leading-none sd-value-trans"
-          style={{ fontSize: 28, color: tone }}
+          className="font-mono font-medium leading-none sd-value-trans"
+          style={{ fontSize: 32, color: tone, letterSpacing: "-0.02em" }}
         >
           {value.toFixed(0)}
         </span>
-        <span className="font-mono text-[var(--ink-faint)]" style={{ fontSize: 10 }}>
+        <span className="font-mono text-[var(--ink-faint)]" style={{ fontSize: 11 }}>
           /100
         </span>
       </div>
       <div
-        className="mt-1.5 w-full"
-        style={{ height: 2, backgroundColor: "var(--rule)" }}
+        className="mt-2 w-full"
+        style={{ height: 3, backgroundColor: "var(--rule-soft)" }}
       >
         <div
           className="sd-value-trans"
@@ -154,17 +154,17 @@ function IndicatorRow({
   const formatted = formatIndicatorValue(value, displayFormat as never, unit);
 
   return (
-    <div className="flex items-center gap-1.5 py-1">
+    <div className="flex items-center justify-between py-1">
       <span
-        className="font-mono text-[var(--ink-soft)] truncate flex-1"
-        style={{ fontSize: 9 }}
+        className="font-mono text-[var(--ink-soft)] truncate"
+        style={{ fontSize: 10 }}
         title={name}
       >
         {name}
       </span>
       <span
-        className="font-mono sd-value-trans"
-        style={{ fontSize: 11, color: tone, minWidth: 44, textAlign: "right" }}
+        className="font-mono sd-value-trans shrink-0 ml-2"
+        style={{ fontSize: 11, color: tone, textAlign: "right", fontVariantNumeric: "tabular-nums" }}
       >
         {formatted}
       </span>

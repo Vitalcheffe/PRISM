@@ -89,16 +89,16 @@ export function SimHeader() {
         {/* GAUCHE — titre + sous-titre */}
         <div className="flex flex-col min-w-0">
           <h1
-            className="font-mono font-semibold text-[var(--ink)] leading-none truncate"
-            style={{ fontSize: 13, letterSpacing: "0.02em" }}
+            className="font-mono font-medium text-[var(--ink)] leading-none truncate"
+            style={{ fontSize: 12, letterSpacing: "0.06em" }}
           >
-            SYSTÈME DYNAMIQUE
+            PRISM
           </h1>
           <p
-            className="font-mono text-[var(--ink-mute)] truncate mt-0.5"
-            style={{ fontSize: 9, letterSpacing: "0.02em" }}
+            className="font-mono text-[var(--ink-mute)] truncate mt-1"
+            style={{ fontSize: 8, letterSpacing: "0.04em" }}
           >
-            Maroc · {leversCount} leviers · {indicatorsCount} indicateurs
+            Morocco · {leversCount} levers · {indicatorsCount} indicators
           </p>
         </div>
 
