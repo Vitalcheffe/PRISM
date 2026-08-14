@@ -306,6 +306,10 @@ footer .right{
     <a href="#token-economy">Tokens</a>
     <a href="#paradigm-delta">Delta</a>
     <a href="#interactive-map">Map</a>
+    <a href="#kernel">Kernel</a>
+    <a href="#life">Life</a>
+    <a href="#governance">Govern</a>
+    <a href="#emergence">Emergence</a>
   </div>
   <div class="right">
     <button class="toggle" id="themeToggle" aria-label="Toggle color theme">
@@ -592,6 +596,74 @@ footer .right{
   <p class="caption">Every file in the simulation engine, every import dependency, every data-flow edge. Hover to isolate a node and its neighbors. Click to inspect imports, dependents, and trace upstream or downstream reach. Filter by pipeline layer. Search by name. Dark and light, toggleable. A living map of the system, not a static diagram.</p>
   <div class="facts">14 NODES · 27 EDGES · HOVER · CLICK · TRACE</div>
 </section>
+<div class="divider"></div>
+
+<!-- 17 — The Kernel -->
+<section class="section" id="kernel">
+  <span class="num">17</span>
+  <h2 class="title">The Kernel</h2>
+  <p class="subtitle">The heartbeat. 12 phases per cycle, 200ms per tick.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="kernel-architecture-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="kernel-architecture-light.png">
+      <img data-dark="kernel-architecture-dark.png" data-light="kernel-architecture-light.png" src="kernel-architecture-light.png" alt="The PRISM Kernel — 12-phase lifecycle">
+    </picture>
+  </div>
+  <p class="caption">The simulation formalized as an operating system. Twelve phases execute in order every tick: BOOT, EXTRACT, NEURAL, NONLINEAR, SWARM, LIFECYCLE, GOVERN, BLACKSWAN, PARADIGM, COMMIT, EMIT, HALT. Subsystems register for phases. A syscall surface exposes read_state, set_lever, get_phase, get_uptime. The engine that did the work now has a structure that can be reasoned about.</p>
+  <div class="facts">12 PHASES · 8 SYSCALLS · v1.0.0</div>
+</section>
+<div class="divider"></div>
+
+<!-- 18 — The Life System -->
+<section class="section" id="life">
+  <span class="num">18</span>
+  <h2 class="title">The Life System</h2>
+  <p class="subtitle">10,000 agents, born and dying. A living population.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="life-cycle-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="life-cycle-light.png">
+      <img data-dark="life-cycle-dark.png" data-light="life-cycle-light.png" src="life-cycle-light.png" alt="Life system — population pyramid and life stages">
+    </picture>
+  </div>
+  <p class="caption">The swarm is not static. Each agent has an age, a life stage, a household, children, health, fertility. Infants are born. Students become workers, form households, reproduce. Workers mature, retire, grow old, die. Each death triggers a replacement birth — the population is stable but the individuals turn over. Median age 28, matching Morocco. One tick is one month. Twelve ticks is a year. A generation passes in 360 ticks.</p>
+  <div class="facts">7 STAGES · BIRTH · DEATH · REPRODUCTION · τ = 1 MONTH/TICK</div>
+</section>
+<div class="divider"></div>
+
+<!-- 19 — The Governance System -->
+<section class="section" id="governance">
+  <span class="num">19</span>
+  <h2 class="title">The Governance System</h2>
+  <p class="subtitle">The state as a manager. Eight ministries, real budgets.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="governance-matrix-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="governance-matrix-light.png">
+      <img data-dark="governance-matrix-dark.png" data-light="governance-matrix-light.png" src="governance-matrix-light.png" alt="Governance — 8 ministries budget matrix">
+    </picture>
+  </div>
+  <p class="caption">The country is not just levers and agents — there is a state that manages. Eight ministries receive budget allocations totaling 500 Mrd MAD, matching Morocco's Loi de Finances. Each spends according to its bureaucratic efficiency; the remainder is leakage to corruption. Service quality drifts with spending. Capacity drifts with governance effectiveness. Switching paradigm reallocates the budget — liberalism favors infrastructure, planned favors social.</p>
+  <div class="facts">8 MINISTRIES · 500 MRD MAD · 28.8% LEAKAGE · CAPACITY 0.58</div>
+</section>
+<div class="divider"></div>
+
+<!-- 20 — Emergence -->
+<section class="section" id="emergence">
+  <span class="num">20</span>
+  <h2 class="title">Emergence</h2>
+  <p class="subtitle">Simple rules. Complex behavior. Life, arising.</p>
+  <div class="image">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="emergence-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="emergence-light.png">
+      <img data-dark="emergence-dark.png" data-light="emergence-light.png" src="emergence-light.png" alt="Emergence — wave field of life">
+    </picture>
+  </div>
+  <p class="caption">When the Kernel runs the Life system through the Governance layer, patterns arise that are not coded. Business cycles oscillate on a 7–10 year simulated周期 as ministry spending, agent income, and GDP output interact. Political waves emerge as demographic cohorts age — a youth bulge reaching working age shifts faction stress and threat probabilities. Cultural shifts accumulate over a generation as education levels change behavior. The causality is long, indirect, and emergent. La vie n'est pas simulée. Elle émerge.</p>
+  <div class="facts">3 RULES → ∞ PATTERNS · BUSINESS CYCLES · POLITICAL WAVES</div>
+</section>
 
 <footer>
   <div class="left">PRISM · MIT License</div>
@@ -600,6 +672,7 @@ footer .right{
     <a href="../NOTES.md" target="_blank">NOTES.md ↗</a>
     <a href="GLOSSARY.md" target="_blank">GLOSSARY.md ↗</a>
     <a href="TELEMETRY.md" target="_blank">TELEMETRY.md ↗</a>
+    <a href="KERNEL.md" target="_blank">KERNEL.md ↗</a>
     <a href="https://github.com/Vitalcheffe/PRISM" target="_blank" rel="noopener">GitHub ↗</a>
   </div>
   <div class="right">v1.0</div>

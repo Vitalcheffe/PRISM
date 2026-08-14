@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:900px;background:#ffffff;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:32px 32px}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.center-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1500px;height:560px;background:radial-gradient(ellipse,rgba(245,158,11,0.10) 0%,rgba(245,158,11,0.05) 35%,transparent 70%);pointer-events:none;z-index:0}
+
+.title-block{position:absolute;top:24px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.title-block h2{font-size:13px;color:#737373;letter-spacing:0.3em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+
+.rules{position:absolute;top:78px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:22px;font-family:'SF Mono',monospace;font-size:10px;letter-spacing:0.1em;z-index:2}
+.rule{display:inline-flex;align-items:center;gap:8px}
+.rule-name{color:#f59e0b;font-weight:600}
+.rule-val{color:#737373}
+.rule-sep{color:#A3A3A3}
+
+.tagline{position:absolute;top:108px;left:50%;transform:translateX(-50%);font-family:'SF Mono',monospace;font-size:11px;color:#A3A3A3;font-style:italic;letter-spacing:0.06em;z-index:2}
+
+.wave-field{position:absolute;top:160px;left:160px;z-index:1}
+
+.quote-block{position:absolute;top:778px;left:50%;transform:translateX(-50%);text-align:center;max-width:700px;z-index:2}
+.quote-block .quote{font-size:13px;color:#737373;font-style:italic;letter-spacing:0.04em;line-height:1.5}
+.quote-block .attr{font-size:10px;color:#A3A3A3;font-family:'SF Mono',monospace;letter-spacing:0.2em;margin-top:10px}
+
+.meta{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:9px;color:#D4D4D4;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+<div class="center-glow"></div>
+
+<div class="title-block">
+<h2>EMERGENCE</h2>
+</div>
+
+<div class="rules">
+<span class="rule"><span class="rule-name">KERNEL</span><span class="rule-sep">&middot;</span><span class="rule-val">200ms TICK</span></span>
+<span class="rule-sep">&middot;</span>
+<span class="rule"><span class="rule-name">LIFE</span><span class="rule-sep">&middot;</span><span class="rule-val">10,000 AGENTS</span></span>
+<span class="rule-sep">&middot;</span>
+<span class="rule"><span class="rule-name">GOVERN</span><span class="rule-sep">&middot;</span><span class="rule-val">8 MINISTRIES</span></span>
+</div>
+
+<div class="tagline">simple rules &rarr; complex behavior &rarr; emergence</div>
+
+<div class="wave-field" id="wave"></div>
+
+<div class="quote-block">
+<div class="quote">&ldquo;La vie n'est pas simul&eacute;e. Elle &eacute;merge.&rdquo;</div>
+<div class="attr">&mdash; PRISM</div>
+</div>
+
+<div class="meta">PRISM / EMERGENCE / 3 RULES &rarr; &infin; PATTERNS</div>
+</div>
+
+<script>
+(function(){
+  const cols = 40, rows = 20;
+  const colSpacing = 39;
+  const rowSpacing = 29;
+  const xStart = 22, yStart = 18;
+  const A1 = 10, A2 = 5;
+  const f1 = 0.005, f2 = 0.013;
+  const t = 0.8;
+  const maxAmp = A1 + A2;
+  const W = 1600, H = 600;
+
+  let seed = 20240117;
+  function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+
+  function waveAt(x){
+    return A1 * Math.sin(x * f1 + t) + A2 * Math.sin(x * f2 + t * 1.3);
+  }
+
+  const dots = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = xStart + c * colSpacing;
+      const baseY = yStart + r * rowSpacing;
+      const w = waveAt(x);
+      const y = baseY + w;
+      const amp = Math.abs(w);
+      const ampNorm = Math.min(1, amp / maxAmp);
+      const isCrisis = rnd() < 0.05;
+      const color = isCrisis ? '#f43f5e' : '#f59e0b';
+      const op = 0.30 + ampNorm * 0.65;
+      const size = 2 + ampNorm * 1;
+      dots.push({x, y, baseY, wave: w, color, op, size, isCrisis, col: c, row: r});
+    }
+  }
+
+  const midRow = 10;
+  let peak = null, trough = null, node = null;
+  for (const d of dots) {
+    if (d.row !== midRow) continue;
+    if (!peak || d.wave > peak.wave) peak = d;
+    if (!trough || d.wave < trough.wave) trough = d;
+  }
+  let bestNode = Infinity;
+  for (const d of dots) {
+    if (d.row !== midRow) continue;
+    if (d.col === peak.col || d.col === trough.col) continue;
+    if (Math.abs(d.wave) < bestNode) {
+      bestNode = Math.abs(d.wave);
+      node = d;
+    }
+  }
+
+  const labels = [
+    {
+      text: 'business cycle',
+      dotX: peak.x, dotY: peak.y,
+      labelX: peak.x + 60, labelY: peak.y - 38,
+      anchor: 'start'
+    },
+    {
+      text: 'political wave',
+      dotX: trough.x, dotY: trough.y,
+      labelX: trough.x - 60, labelY: trough.y - 38,
+      anchor: 'end'
+    },
+    {
+      text: 'cultural shift',
+      dotX: node.x, dotY: node.y,
+      labelX: node.x + 64, labelY: node.y + 44,
+      anchor: 'start'
+    }
+  ];
+
+  let s = '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">';
+  s += '<defs>';
+  s += '<filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="1.5"/></filter>';
+  s += '</defs>';
+
+  for (const d of dots) {
+    const x = d.x - d.size/2;
+    const y = d.y - d.size/2;
+    if (d.isCrisis || d.op > 0.75) {
+      s += '<rect x="'+(x-1).toFixed(2)+'" y="'+(y-1).toFixed(2)+'" width="'+(d.size+2).toFixed(2)+'" height="'+(d.size+2).toFixed(2)+'" fill="'+d.color+'" opacity="'+(d.op*0.35).toFixed(2)+'" filter="url(#dotGlow)" rx="0.5"/>';
+    }
+    s += '<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+d.size.toFixed(2)+'" height="'+d.size.toFixed(2)+'" fill="'+d.color+'" opacity="'+d.op.toFixed(2)+'" rx="0.4"/>';
+  }
+
+  labels.forEach(lb => {
+    s += '<line x1="'+lb.labelX.toFixed(1)+'" y1="'+lb.labelY.toFixed(1)+'" x2="'+lb.dotX.toFixed(1)+'" y2="'+lb.dotY.toFixed(1)+'" stroke="#f59e0b" stroke-width="0.7" opacity="0.30"/>';
+    s += '<circle cx="'+lb.dotX.toFixed(1)+'" cy="'+lb.dotY.toFixed(1)+'" r="5" fill="none" stroke="#f59e0b" stroke-width="0.7" opacity="0.65"/>';
+    s += '<circle cx="'+lb.dotX.toFixed(1)+'" cy="'+lb.dotY.toFixed(1)+'" r="2" fill="#f59e0b" opacity="0.95"/>';
+    s += '<text x="'+lb.labelX.toFixed(1)+'" y="'+lb.labelY.toFixed(1)+'" fill="#A3A3A3" font-family="SF Mono,monospace" font-size="11" text-anchor="'+lb.anchor+'" font-style="italic" letter-spacing="0.5">'+lb.text+'</text>';
+  });
+
+  s += '</svg>';
+  document.getElementById('wave').innerHTML = s;
+})();
+</script>
+</body>
+</html>

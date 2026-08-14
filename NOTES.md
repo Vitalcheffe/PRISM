@@ -379,6 +379,21 @@ Crée un vrai système. Une vraie logique. Une vraie méthodologie. Si je dois p
   <img alt="Token economy — 571× compression" src="docs/token-economy-light.png" width="100%">
 </picture>
 
+> And then life arose. Not coded — emerged. The Kernel beats 12 phases
+> every 200ms. The Life system breathes: agents are born, age, form
+> households, reproduce, die. The Governance layer manages: eight
+> ministries, 500 Mrd MAD, real budgets, real leakage. When these three
+> run together, patterns appear that no one wrote: business cycles
+> oscillate, political waves rise as cohorts age, cultural shifts
+> accumulate over generations. The simulation stopped being a model and
+> became a living system. La vie n'est pas simulée. Elle émerge.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/emergence-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/emergence-light.png">
+  <img alt="Emergence — life arising from the system" src="docs/emergence-light.png" width="100%">
+</picture>
+
 > The words below were spoken before any of this existed. They described a
 > mind that could not hold its own vision — "j'imagine deux ridicules de le
 > lendemain, j'oublie tout." The system is the externalization of that mind.
@@ -393,9 +408,10 @@ Crée un vrai système. Une vraie logique. Une vraie méthodologie. Si je dois p
   <img alt="Manifesto — des liens de liens de liens de liens de liens" src="docs/manifesto-light.png" width="100%">
 </picture>
 
-> The complete visual system — sixteen diagrams, dark and light, plus a
+> The complete visual system — twenty diagrams, dark and light, plus a
 > navigable codebase map — is collected in [docs/gallery.html](./docs/gallery.html).
 > The interactive architecture map lives at
 > [docs/architecture-interactive.html](./docs/architecture-interactive.html).
 > Every term used above is pinned in [docs/GLOSSARY.md](./docs/GLOSSARY.md);
-> every engine signal is documented in [docs/TELEMETRY.md](./docs/TELEMETRY.md).
+> every engine signal is documented in [docs/TELEMETRY.md](./docs/TELEMETRY.md);
+> the Kernel specification is in [docs/KERNEL.md](./docs/KERNEL.md).

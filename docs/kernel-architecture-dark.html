@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:900px;background:#0d1117;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1px,transparent 1px);background-size:32px 32px}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.title-block{position:absolute;top:26px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.title-block h2{font-size:13px;color:#8b949e;letter-spacing:0.25em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.title-block p{font-size:11px;color:#3d444d;margin-top:6px;font-family:'SF Mono',monospace;letter-spacing:0.05em}
+.diagram{position:absolute;top:75px;left:50%;transform:translateX(-50%);z-index:1}
+.syscalls{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);z-index:2;text-align:center}
+.syscalls .sys-label{font-size:10px;color:#3d444d;letter-spacing:0.2em;font-family:'SF Mono',monospace;margin-bottom:14px}
+.syscalls .pills{display:flex;gap:34px;justify-content:center;align-items:center}
+.syscalls .pill{font-size:11px;color:#8b949e;font-family:'SF Mono',monospace;display:flex;align-items:center;gap:8px;letter-spacing:0.04em}
+.syscalls .pill::before{content:"";width:5px;height:5px;border-radius:50%;background:#f59e0b;opacity:0.75;flex-shrink:0;box-shadow:0 0 4px rgba(245,158,11,0.5)}
+.meta{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:9px;color:#3d444d;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+
+<div class="title-block">
+<h2>THE PRISM KERNEL</h2>
+<p>scheduler &middot; lifecycle &middot; syscalls &middot; 12 phases per cycle</p>
+</div>
+
+<div class="diagram" id="diagram"></div>
+
+<div class="syscalls">
+<div class="sys-label">SYSCALLS</div>
+<div class="pills">
+<span class="pill">read_state</span>
+<span class="pill">set_lever</span>
+<span class="pill">get_phase</span>
+<span class="pill">get_uptime</span>
+<span class="pill">register_subsystem</span>
+<span class="pill">disable_phase</span>
+</div>
+</div>
+
+<div class="meta">PRISM / KERNEL / v1.0.0 &middot; 200ms TICK &middot; 12 PHASES</div>
+</div>
+
+<script>
+(function(){
+  // 12 phases — BOOT at 12 o'clock, clockwise
+  const phases = [
+    {num:'01', name:'BOOT',      color:'#6e7681', active:false},
+    {num:'02', name:'EXTRACT',   color:'#06b6d4', active:false},
+    {num:'03', name:'NEURAL',    color:'#f59e0b', active:true},
+    {num:'04', name:'NONLINEAR', color:'#10b981', active:false},
+    {num:'05', name:'SWARM',     color:'#a855f7', active:true},
+    {num:'06', name:'LIFECYCLE', color:'#f43f5e', active:true},
+    {num:'07', name:'GOVERN',    color:'#f97316', active:false},
+    {num:'08', name:'BLACKSWAN', color:'#eab308', active:false},
+    {num:'09', name:'PARADIGM',  color:'#84cc16', active:false},
+    {num:'10', name:'COMMIT',    color:'#6e7681', active:false},
+    {num:'11', name:'EMIT',      color:'#6e7681', active:false},
+    {num:'12', name:'HALT',      color:'#6e7681', active:false}
+  ];
+
+  const orbitR = 250;
+  const nodeR  = 24;
+  const labelR = 340;
+  const startAngleDeg = -90; // BOOT at 12 o'clock
+
+  phases.forEach((p, i) => {
+    const ang = (startAngleDeg + i * 30) * Math.PI / 180;
+    p.x = orbitR * Math.cos(ang);
+    p.y = orbitR * Math.sin(ang);
+    p.ang = ang;
+  });
+
+  // 4 subsystems at cardinals — leader lines go to nearest phase node
+  const subsystems = [
+    {label:'NLP CAUSAL EXTRACTOR',            angDeg:-90},
+    {label:'NEURAL NETWORK \u00B7 3,008 WEIGHTS', angDeg:0},
+    {label:'AGENT SWARM \u00B7 10,000',       angDeg:90},
+    {label:'LIFE \u00B7 GOVERNANCE',          angDeg:180}
+  ];
+  subsystems.forEach(sub => {
+    const a = sub.angDeg * Math.PI / 180;
+    sub.lx = labelR * Math.cos(a);
+    sub.ly = labelR * Math.sin(a);
+    // nearest phase by angular distance
+    let nIdx = 0, nDist = 999;
+    phases.forEach((p, i) => {
+      let d = Math.abs(p.ang - a);
+      d = Math.min(d, 2*Math.PI - d);
+      if (d < nDist) { nDist = d; nIdx = i; }
+    });
+    sub.tx = phases[nIdx].x;
+    sub.ty = phases[nIdx].y;
+    // label text position offset outward from leader endpoint
+    sub.txLabel = sub.lx;
+    sub.tyLabel = sub.ly;
+    sub.anchor = 'middle';
+    if (sub.angDeg === -90)       { sub.tyLabel = sub.ly - 10; }
+    else if (sub.angDeg === 0)    { sub.txLabel = sub.lx + 14; sub.tyLabel = sub.ly + 4; sub.anchor = 'start'; }
+    else if (sub.angDeg === 90)   { sub.tyLabel = sub.ly + 18; }
+    else if (sub.angDeg === 180)  { sub.txLabel = sub.lx - 14; sub.tyLabel = sub.ly + 4; sub.anchor = 'end'; }
+  });
+
+  let s = '<svg width="1300" height="720" viewBox="-650 -360 1300 720">';
+  s += '<defs>';
+  s += '<filter id="nodeGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6"/></filter>';
+  s += '<filter id="coreGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="18"/></filter>';
+  s += '<radialGradient id="coreFill" cx="50%" cy="50%" r="50%">';
+  s += '<stop offset="0%" stop-color="#f59e0b" stop-opacity="0.10"/>';
+  s += '<stop offset="60%" stop-color="#f59e0b" stop-opacity="0.04"/>';
+  s += '<stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>';
+  s += '</radialGradient>';
+  s += '</defs>';
+
+  // outermost very faint guide ring at label radius
+  s += '<circle cx="0" cy="0" r="'+labelR+'" fill="none" stroke="#f59e0b" stroke-width="0.4" opacity="0.06" stroke-dasharray="1,8"/>';
+
+  // orbit cycle ring — dashed amber, 30% opacity
+  s += '<circle cx="0" cy="0" r="'+orbitR+'" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.30" stroke-dasharray="2,5"/>';
+
+  // clockwise direction arrowhead on the orbit ring at -75° (between BOOT and EXTRACT)
+  const arrowAng = -75 * Math.PI / 180;
+  const arrowX = orbitR * Math.cos(arrowAng);
+  const arrowY = orbitR * Math.sin(arrowAng);
+  const tdx = -Math.sin(arrowAng);
+  const tdy = Math.cos(arrowAng);
+  const pdx = -tdy;
+  const pdy = tdx;
+  const aSize = 8;
+  const ax1 = arrowX + tdx * aSize;
+  const ay1 = arrowY + tdy * aSize;
+  const ax2 = arrowX - tdx * aSize * 0.4 + pdx * aSize * 0.8;
+  const ay2 = arrowY - tdy * aSize * 0.4 + pdy * aSize * 0.8;
+  const ax3 = arrowX - tdx * aSize * 0.4 - pdx * aSize * 0.8;
+  const ay3 = arrowY - tdy * aSize * 0.4 - pdy * aSize * 0.8;
+  s += '<polygon points="'+ax1.toFixed(1)+','+ay1.toFixed(1)+' '+ax2.toFixed(1)+','+ay2.toFixed(1)+' '+ax3.toFixed(1)+','+ay3.toFixed(1)+'" fill="#f59e0b" opacity="0.65"/>';
+
+  // leader lines from subsystem labels to nearest phase node
+  subsystems.forEach(sub => {
+    s += '<line x1="'+sub.lx.toFixed(1)+'" y1="'+sub.ly.toFixed(1)+'" x2="'+sub.tx.toFixed(1)+'" y2="'+sub.ty.toFixed(1)+'" stroke="#f59e0b" stroke-width="0.6" opacity="0.15"/>';
+    // tiny tick at the leader start
+    s += '<circle cx="'+sub.lx.toFixed(1)+'" cy="'+sub.ly.toFixed(1)+'" r="1.5" fill="#f59e0b" opacity="0.4"/>';
+  });
+
+  // phase nodes
+  phases.forEach((p) => {
+    if (p.active) {
+      // glow halo
+      s += '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(nodeR*1.9).toFixed(1)+'" fill="'+p.color+'" opacity="0.30" filter="url(#nodeGlow)"/>';
+      // filled node
+      s += '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+nodeR+'" fill="'+p.color+'" opacity="0.95"/>';
+      // inner subtle ring
+      s += '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(nodeR-4).toFixed(1)+'" fill="none" stroke="#0d1117" stroke-width="0.5" opacity="0.35"/>';
+      // phase number — dark for contrast on bright fill
+      s += '<text x="'+p.x.toFixed(1)+'" y="'+(p.y+3.5).toFixed(1)+'" fill="#0d1117" font-family="SF Mono,monospace" font-size="10" text-anchor="middle" letter-spacing="0.5" font-weight="600">'+p.num+'</text>';
+    } else {
+      // stroked node
+      s += '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+nodeR+'" fill="#0d1117" stroke="'+p.color+'" stroke-width="1.2" opacity="0.70"/>';
+      // phase number in phase color
+      s += '<text x="'+p.x.toFixed(1)+'" y="'+(p.y+3.5).toFixed(1)+'" fill="'+p.color+'" font-family="SF Mono,monospace" font-size="10" text-anchor="middle" letter-spacing="0.5" opacity="0.95">'+p.num+'</text>';
+    }
+    // phase name below the node
+    s += '<text x="'+p.x.toFixed(1)+'" y="'+(p.y+nodeR+14).toFixed(1)+'" fill="#8b949e" font-family="SF Mono,monospace" font-size="10" text-anchor="middle" letter-spacing="1" opacity="'+(p.active?1:0.75)+''+'" font-weight="'+(p.active?'500':'400')+'">'+p.name+'</text>';
+  });
+
+  // subsystem labels
+  subsystems.forEach(sub => {
+    s += '<text x="'+sub.txLabel.toFixed(1)+'" y="'+sub.tyLabel.toFixed(1)+'" fill="#6e7681" font-family="SF Mono,monospace" font-size="11" text-anchor="'+sub.anchor+'" letter-spacing="1.5">'+sub.label+'</text>';
+  });
+
+  // center core — radial glow + circle + label
+  s += '<circle cx="0" cy="0" r="140" fill="url(#coreFill)" filter="url(#coreGlow)"/>';
+  s += '<circle cx="0" cy="0" r="100" fill="#f59e0b" opacity="0.05" filter="url(#coreGlow)"/>';
+  s += '<circle cx="0" cy="0" r="80" fill="#0d1117" stroke="#f59e0b" stroke-width="0.8" opacity="0.60"/>';
+  s += '<circle cx="0" cy="0" r="80" fill="none" stroke="#f59e0b" stroke-width="0.4" opacity="0.30" stroke-dasharray="1,4"/>';
+  s += '<circle cx="0" cy="0" r="72" fill="none" stroke="#f59e0b" stroke-width="0.3" opacity="0.20"/>';
+  s += '<text x="0" y="-2" fill="#f0f6fc" font-family="SF Mono,monospace" font-size="12" text-anchor="middle" letter-spacing="2.5" font-weight="500">PRISM KERNEL</text>';
+  s += '<text x="0" y="16" fill="#6e7681" font-family="SF Mono,monospace" font-size="9" text-anchor="middle" letter-spacing="1.5">v1.0.0 \u00B7 200ms</text>';
+  // tiny tick marks at 4 inner-cardinal positions on the center circle (like a clock face)
+  for(let i=0;i<12;i++){
+    const a = (startAngleDeg + i*30) * Math.PI / 180;
+    const r1 = 80, r2 = 86;
+    const x1 = r1 * Math.cos(a), y1 = r1 * Math.sin(a);
+    const x2 = r2 * Math.cos(a), y2 = r2 * Math.sin(a);
+    s += '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="#f59e0b" stroke-width="0.6" opacity="0.4"/>';
+  }
+
+  s += '</svg>';
+  document.getElementById('diagram').innerHTML = s;
+})();
+</script>
+</body>
+</html>

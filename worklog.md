@@ -240,3 +240,58 @@ Stage Summary:
 - Gallery extended to 16 sections. README + NOTES updated.
 - Total docs/ now: 16 viz sets (32 PNGs) + architecture + interactive map + gallery + GLOSSARY + TELEMETRY = 37 visual/doc artifacts.
 - Ready for commit 8.
+
+---
+Task ID: 9-a
+Agent: kernel-life-governance-builder
+Task: Build 3 real engine modules — kernel.ts, life.ts, governance.ts.
+
+Work Log:
+- Read worklog.md, agent-swarm.ts (Agent/Faction interfaces, seeded patterns), model.ts (LEVERS, INDICATORS, MACRO_CONSTANTS — 47 levers, 15 indicators, Morocco baselines), engine.ts (SimulationEngine.step()/snapshot()/adjustLever() — the host surface), nonlinear.ts (7-layer pattern style), and RESEARCH.md §2 (system overview) + §14 (computational architecture, 200ms tick budget, 24 ticks/year).
+- Built kernel.ts: PrismKernel class with 12-phase lifecycle (BOOT→EXTRACT→NEURAL→NONLINEAR→SWARM→LIFECYCLE→GOVERN→BLACKSWAN→PARADIGM→COMMIT→EMIT→HALT), Subsystem interface, KernelState with phaseTimings/hostSnapshot, 8 syscalls (read_state, set_lever, get_phase, get_uptime, get_tick, list_subsystems, register_subsystem, disable_phase, enable_phase), createDefaultKernel factory that registers LifeSystem + GovernanceSystem and boots. The kernel wraps the engine: host.step() is called during NEURAL phase; LIFECYCLE and GOVERN run registered subsystems; other phases are no-ops unless subsystems register. KERNEL_VERSION = "1.0.0".
+- Built life.ts: LifeSystem implementing Subsystem (phase=LIFECYCLE). LifeStage enum (INFANT/CHILD/STUDENT/WORKER/MATURE/RETIREE/ELDER/DECEASED), stageFromAge(), DemographicProfile interface (age, stage, householdId, childrenCount, parentId, birthTick, deathTick, educationLevel, health, fertility, gender). Seeded mulberry32 RNG. init() generates 10,000 profiles with age = floor(r^1.5 * 80) producing median age ~28 (Morocco's actual median, HCP 2023). step() advances demographics monthly: aging every 12 ticks, stage transitions (STUDENT→WORKER triggers household formation), age-scaled mortality (Morocco crude death rate ~5/1000/year, Gompertz-style scaling), reproduction (WORKER/MATURE females, ~13/1000/year birth rate), education accumulation from education levers, health decline modulated by healthcare levers. Population maintained stable: each death spawns a replacement infant. getPopulationPyramid() returns 7-band {ageGroup, male, female} array. getDemographicStats() returns medianAge, birthRate, deathRate, dependencyRatio, populationGrowth.
+- Built governance.ts: GovernanceSystem implementing Subsystem (phase=GOVERN). Ministry interface (id, name, allocatedBudget, spentBudget, capacity, serviceQuality, efficiency, leakage, referenceBudget), MinistryId type (8 ministries). init() creates 8 ministries with real Moroccan budget proportions (total ~500 Mrd MAD: education 15%, health 7%, infrastructure 12%, interior 8%, finance 6%, defense 6%, agriculture 8%, social 38%). Initial capacity 0.4-0.7, efficiency 0.6-0.8, leakage 0.15-0.30 (Morocco corruption perception). step() reallocates budget by paradigm (liberal→infra+defense, planned→social+education, authoritarian→interior+defense, etc.), spends (spentBudget = allocated * efficiency), updates serviceQuality (spending above reference improves, below degrades), drifts capacity (low corruption → capacity up, digital_admin_budget boosts it), adjusts leakage toward anti-corruption target. setAllocation() for manual reallocation. getGovernanceStats() returns totalBudget, totalSpent, totalLeakage, avgCapacity, avgServiceQuality, avgEfficiency, corruptionIndex.
+- Type-checked all 3 files with `bunx tsc --noEmit --strict` → 0 errors, exit code 0. Fixed two import issues (KernelPhase enum needed as value import, not type-only).
+- Ran smoke test (mock host) and integration test (real SimulationEngine): kernel boots, 12 cycles run in ~6-8ms total (NEURAL ~3ms, LIFECYCLE ~3ms, GOVERN ~0.3ms — well within 200ms tick budget), population pyramid is realistic (more young than old, median 28), budget totals 500 Mrd MAD, all 8 syscalls work, halt shuts down cleanly.
+
+Stage Summary:
+- Files:
+  - mini-services/simulation-engine/kernel.ts (340 lines) — PrismKernel, KernelPhase enum (12 phases), Subsystem/KernelState/KernelHost interfaces, PHASE_ORDER, KERNEL_VERSION, createDefaultKernel factory, 8 syscalls.
+  - mini-services/simulation-engine/life.ts (600 lines) — LifeSystem, LifeStage enum (8 stages), stageFromAge(), DemographicProfile interface, mulberry32 seeded RNG, population pyramid, demographic stats, 10,000-agent demographic simulation with aging/mortality/reproduction/households/education/health.
+  - mini-services/simulation-engine/governance.ts (339 lines) — GovernanceSystem, Ministry interface, MinistryId type (8 ministries), paradigm-based budget reallocation, corruption/leakage/capacity/serviceQuality dynamics, setAllocation manual override.
+  - Total: 1,279 lines of new TypeScript.
+- Key design decisions:
+  - Kernel wraps (not replaces) the engine: host.step() during NEURAL phase handles neural+nonlinear+swarm+blackswan internally; kernel adds LIFECYCLE and GOVERN phases for the new subsystems.
+  - Circular dependency (kernel↔life↔governance) resolved via mixed type+value imports: life.ts/governance.ts import KernelPhase as value + Subsystem/KernelState as types; kernel.ts imports LifeSystem/GovernanceSystem as values (used only inside createDefaultKernel, called at runtime after all modules are loaded).
+  - Life system uses 12 ticks/year (per spec) rather than the engine's 24 ticks/year — demographics operate on a monthly time step.
+  - Age distribution via age = floor(r^1.5 * 80) produces median ~28 (Morocco's actual median age) with a young-skewed pyramid.
+  - Population maintained stable: each death triggers a replacement infant birth; additional births come from WORKER/MATURE reproduction.
+  - Governance budget proportions are real Moroccan Loi de Finances figures (~500 Mrd MAD total); paradigm shifts reallocate ±2-5% across ministries.
+  - Seeded mulberry32 RNG in both life and governance for reproducible simulations.
+- All comments in French, matching existing engine file style (header comments, section dividers, inline comments).
+- Verified: `bunx tsc --noEmit --strict` passes (0 errors); integration with real SimulationEngine works (3 cycles, ~7ms each); population pyramid is plausible; budget totals correct.
+
+---
+Task ID: 9-c
+Agent: orchestrator (main)
+Task: Write KERNEL.md, integrate 4 new viz into gallery/README/NOTES, smoke test, commit.
+
+Work Log:
+- Verified all 8 viz HTML files from Task 9-b were written before the context deadline (subagent failed during reporting, not during work). Rendered all 8 PNGs via render-9-pngs.sh: kernel-architecture (1920×900), life-cycle (1920×800), governance-matrix (1920×760), emergence (1920×900) × dark/light.
+- Verified emergence viz uses SVG with 1109 rects (procedural wave-field), 6 circles, French quote "La vie n'est pas simulée. Elle émerge." present, 3 emergent labels (business cycle, political wave, cultural shift).
+- Wrote KERNEL.md: ~3000 words specifying the 12-phase lifecycle, the Subsystem interface, KernelState, the 8-syscall surface, the factory, the Life subsystem (demographics: birth/aging/reproduction/death, median age 28, 12 ticks/year), the Governance subsystem (8 ministries, 500 Mrd MAD, real Loi de Finances proportions, leakage/capacity drift), emergence (business cycles, political waves, cultural shifts), versioning policy.
+- Integrated 4 new viz into gallery.html: sections 17-20 (The Kernel, The Life System, The Governance System, Emergence) + nav links + KERNEL.md footer link. Gallery now 20 content sections + hero = 21 sections, 19 nav links.
+- Updated README.md: added 4 new sections (kernel, life, governance, emergence) before "Visual system" + KERNEL.md link in the docs paragraph.
+- Updated NOTES.md: added emergence image in the Epilogue as the culmination ("La vie n'est pas simulée. Elle émerge."), updated closing reference to mention 20 diagrams + KERNEL.md.
+- Smoke test: created a mock host, ran createDefaultKernel → boot → 3 cycles → syscalls → halt. PASSED. Phase timings: LIFECYCLE ~3ms steady, GOVERN ~0.1ms, total ~15ms/tick (93% headroom). Syscalls read_state/get_phase/get_uptime all return correct values.
+- Lint: clean, zero errors.
+- Gallery verified: 20 section titles confirmed in order.
+
+Stage Summary:
+- 3 new engine modules: kernel.ts (340 lines), life.ts (600 lines), governance.ts (339 lines) — type-check clean, smoke test passed.
+- 4 new viz sets: 8 HTML + 8 PNG in docs/.
+- 1 new doc: KERNEL.md (~3000 words).
+- Gallery: 20 sections. README: 4 new sections. NOTES: emergence capstone.
+- Total docs/ now: 20 viz sets (40 PNGs) + architecture + interactive map + gallery + GLOSSARY + TELEMETRY + KERNEL = 44 visual/doc artifacts.
+- Total engine modules: 15 (was 12, +kernel +life +governance).
+- Ready for commit 9.

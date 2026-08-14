@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:760px;background:#ffffff;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:32px 32px}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.title-block{position:absolute;top:22px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.title-block h2{font-size:13px;color:#737373;letter-spacing:0.25em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.title-block p{font-size:11px;color:#A3A3A3;margin-top:6px;font-family:'SF Mono',monospace;letter-spacing:0.05em}
+
+.ministries{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:1}
+
+.divider{position:absolute;top:500px;left:50%;transform:translateX(-50%);width:1200px;height:1px;background:rgba(245,158,11,0.18);z-index:2}
+
+.summary{position:absolute;top:520px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;gap:9px;align-items:center}
+.summary-row{display:flex;justify-content:center;align-items:baseline;gap:28px;font-family:'SF Mono',monospace;font-size:11px;letter-spacing:0.12em}
+.sum-label{color:#737373;width:200px;text-align:right}
+.sum-value{color:#1A1A1A;width:260px;text-align:left;font-weight:500}
+.summary-row.leak .sum-label,.summary-row.leak .sum-value{color:#f43f5e}
+
+.meta{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;color:#D4D4D4;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+
+<div class="title-block">
+<h2>THE GOVERNANCE SYSTEM</h2>
+<p>8 ministries &middot; budget allocation &middot; bureaucratic capacity &middot; service delivery &middot; leakage</p>
+</div>
+
+<div class="ministries" id="ministries"></div>
+
+<div class="divider"></div>
+
+<div class="summary">
+<div class="summary-row"><span class="sum-label">TOTAL BUDGET</span><span class="sum-value">500 Mrd MAD</span></div>
+<div class="summary-row"><span class="sum-label">TOTAL SPENT</span><span class="sum-value">356 Mrd MAD</span></div>
+<div class="summary-row leak"><span class="sum-label">TOTAL LEAKAGE</span><span class="sum-value">144 Mrd MAD  (28.8%)</span></div>
+<div class="summary-row"><span class="sum-label">AVG CAPACITY</span><span class="sum-value">0.58</span></div>
+<div class="summary-row"><span class="sum-label">AVG SERVICE</span><span class="sum-value">0.61</span></div>
+<div class="summary-row"><span class="sum-label">CORRUPTION IDX</span><span class="sum-value">0.29</span></div>
+</div>
+
+<div class="meta">PRISM / GOVERN / 500 MRD MAD &middot; 28.8% LEAKAGE &middot; CAPACITY 0.58</div>
+</div>
+
+<script>
+(function(){
+  const ministries = [
+    {name:'\u00C9DUCATION',      color:'#10b981', budget:75,  eff:0.75, leak:0.18, service:0.68},
+    {name:'SANT\u00C9',          color:'#f43f5e', budget:35,  eff:0.70, leak:0.20, service:0.55},
+    {name:'INFRASTRUCTURE', color:'#f97316', budget:60,  eff:0.78, leak:0.30, service:0.72},
+    {name:'INT\u00C9RIEUR',      color:'#a855f7', budget:40,  eff:0.65, leak:0.35, service:0.60},
+    {name:'FINANCES',       color:'#f59e0b', budget:30,  eff:0.82, leak:0.15, service:0.78},
+    {name:'D\u00C9FENSE',        color:'#06b6d4', budget:30,  eff:0.72, leak:0.25, service:0.65},
+    {name:'AGRICULTURE',    color:'#84cc16', budget:40,  eff:0.68, leak:0.28, service:0.50},
+    {name:'SOCIAL',         color:'#eab308', budget:190, eff:0.68, leak:0.36, service:0.40}
+  ];
+
+  const maxBudget = 190;
+  const barH = 280;
+  const barW = 14;
+  const spentW = 6;
+  const colW = 180;
+  const colGap = 16;
+  const svgW = ministries.length * colW + (ministries.length - 1) * colGap;
+  const svgH = 410;
+
+  let s = '<svg width="'+svgW+'" height="'+svgH+'" viewBox="0 0 '+svgW+' '+svgH+'">';
+  s += '<defs>';
+  s += '<filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="4"/></filter>';
+  s += '</defs>';
+
+  ministries.forEach((m, i) => {
+    const colX = i * (colW + colGap);
+    const colCenter = colX + colW/2;
+    const barX = colCenter - barW/2;
+    const spentX = colCenter - spentW/2 + 4;
+
+    const nameY = 18;
+    const barBottom = 310;
+    const barTop = barBottom - barH;
+    const allocH = (m.budget / maxBudget) * barH;
+    const allocTop = barBottom - allocH;
+    const spentH = allocH * m.eff;
+    const spentTop = barBottom - spentH;
+
+    const statsY = 330;
+    const dotY = 388;
+    const dotR = 8;
+
+    s += '<text x="'+colCenter+'" y="'+nameY+'" fill="'+m.color+'" font-family="SF Mono,monospace" font-size="11" text-anchor="middle" letter-spacing="1.5" font-weight="600">'+m.name+'</text>';
+
+    s += '<rect x="'+barX+'" y="'+barTop+'" width="'+barW+'" height="'+barH+'" fill="'+m.color+'" opacity="0.08"/>';
+    s += '<line x1="'+(barX+0.5)+'" y1="'+barTop+'" x2="'+(barX+0.5)+'" y2="'+barBottom+'" stroke="'+m.color+'" stroke-width="0.4" opacity="0.35"/>';
+
+    s += '<rect x="'+barX+'" y="'+allocTop.toFixed(1)+'" width="'+barW+'" height="'+allocH.toFixed(1)+'" fill="'+m.color+'" opacity="0.55"/>';
+    s += '<rect x="'+barX+'" y="'+allocTop.toFixed(1)+'" width="'+barW+'" height="2" fill="'+m.color+'" opacity="1"/>';
+
+    s += '<rect x="'+spentX+'" y="'+spentTop.toFixed(1)+'" width="'+spentW+'" height="'+spentH.toFixed(1)+'" fill="'+m.color+'" opacity="1"/>';
+
+    s += '<text x="'+colCenter+'" y="'+statsY+'" fill="#737373" font-family="SF Mono,monospace" font-size="10" text-anchor="middle" letter-spacing="0.5">BUDGET\u00A0\u00A0'+m.budget+' Mrd</text>';
+    s += '<text x="'+colCenter+'" y="'+(statsY+15)+'" fill="#737373" font-family="SF Mono,monospace" font-size="10" text-anchor="middle" letter-spacing="0.5">EFF.\u00A0\u00A0\u00A0\u00A0'+m.eff.toFixed(2)+'</text>';
+    const leakColor = m.leak > 0.25 ? '#f43f5e' : '#A3A3A3';
+    s += '<text x="'+colCenter+'" y="'+(statsY+30)+'" fill="'+leakColor+'" font-family="SF Mono,monospace" font-size="10" text-anchor="middle" letter-spacing="0.5">LEAK\u00A0\u00A0\u00A0\u00A0'+m.leak.toFixed(2)+'</text>';
+
+    const dotOp = Math.max(0.35, Math.min(1, m.service + 0.1));
+    if (m.service > 0.6) {
+      s += '<circle cx="'+colCenter+'" cy="'+dotY+'" r="'+(dotR*2.2).toFixed(1)+'" fill="'+m.color+'" opacity="'+(m.service*0.4).toFixed(2)+'" filter="url(#dotGlow)"/>';
+    }
+    s += '<circle cx="'+colCenter+'" cy="'+dotY+'" r="'+dotR+'" fill="'+m.color+'" opacity="'+dotOp.toFixed(2)+'"/>';
+    s += '<circle cx="'+colCenter+'" cy="'+dotY+'" r="'+dotR+'" fill="none" stroke="'+m.color+'" stroke-width="0.4" opacity="0.7"/>';
+  });
+
+  s += '</svg>';
+  document.getElementById('ministries').innerHTML = s;
+})();
+</script>
+</body>
+</html>

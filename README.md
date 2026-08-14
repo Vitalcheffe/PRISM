@@ -222,13 +222,53 @@ Switching regime is not a parameter tweak. The causal graph rewrites itself: edg
   <img alt="Paradigm delta — before / shift / after" src="docs/paradigm-delta-light.png" width="100%">
 </picture>
 
+## The kernel
+
+The simulation is formalized as an operating system. A Kernel runs 12 phases every 200ms tick — BOOT, EXTRACT, NEURAL, NONLINEAR, SWARM, LIFECYCLE, GOVERN, BLACKSWAN, PARADIGM, COMMIT, EMIT, HALT. Subsystems register for phases. A syscall surface exposes `read_state`, `set_lever`, `get_phase`, `get_uptime`, `register_subsystem`, `disable_phase`. The engine that did the work now has a structure that can be reasoned about, extended, and observed. The full specification is in [docs/KERNEL.md](./docs/KERNEL.md).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/kernel-architecture-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/kernel-architecture-light.png">
+  <img alt="The PRISM Kernel — 12-phase lifecycle" src="docs/kernel-architecture-light.png" width="100%">
+</picture>
+
+## The life system
+
+The 10,000 agents are not static. Each has an age, a life stage (infant, child, student, worker, mature, retiree, elder, deceased), a household, children, health, and fertility. Agents are born, go to school, work, form households, reproduce, retire, and die. Each death triggers a replacement birth — the population is stable but the individuals turn over. Median age 28, matching Morocco. One tick is one month; twelve ticks is a year; a generation passes in 360 ticks.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/life-cycle-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/life-cycle-light.png">
+  <img alt="The Life system — population pyramid and life stages" src="docs/life-cycle-light.png" width="100%">
+</picture>
+
+## The governance system
+
+The country has a state that manages. Eight ministries receive budget allocations totaling 500 Mrd MAD, matching Morocco's Loi de Finances. Each spends according to its bureaucratic efficiency; the remainder is leakage to corruption. Service quality drifts with spending. Capacity drifts with governance effectiveness. Switching paradigm reallocates the budget — liberalism favors infrastructure and defense, planned favors social and education.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/governance-matrix-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/governance-matrix-light.png">
+  <img alt="The Governance system — 8 ministries budget matrix" src="docs/governance-matrix-light.png" width="100%">
+</picture>
+
+## Emergence
+
+When the Kernel runs the Life system through the Governance layer, patterns arise that are not coded. Business cycles oscillate as ministry spending, agent income, and GDP output interact. Political waves emerge as demographic cohorts age — a youth bulge reaching working age shifts faction stress and threat probabilities. Cultural shifts accumulate over a generation as education levels change behavior. The causality is long, indirect, and emergent.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/emergence-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/emergence-light.png">
+  <img alt="Emergence — wave field of life" src="docs/emergence-light.png" width="100%">
+</picture>
+
 ## Visual system
 
 The complete set of sixteen diagrams — dark and light, adaptive to your theme — is collected in a standalone gallery: [docs/gallery.html](./docs/gallery.html). Open it in any browser to scroll through the entire system in one page.
 
 For the navigable codebase graph — every engine file, every import dependency, clickable and traceable — open the [interactive architecture map](./docs/architecture-interactive.html).
 
-A pinned ubiquitous language defining every PRISM term (lever, indicator, scar, fragility, paradigm, polarity inversion) is in [docs/GLOSSARY.md](./docs/GLOSSARY.md). The engine's observable signals, tick budget, and event contracts are in [docs/TELEMETRY.md](./docs/TELEMETRY.md).
+A pinned ubiquitous language defining every PRISM term (lever, indicator, scar, fragility, paradigm, polarity inversion) is in [docs/GLOSSARY.md](./docs/GLOSSARY.md). The engine's observable signals, tick budget, and event contracts are in [docs/TELEMETRY.md](./docs/TELEMETRY.md). The Kernel specification — lifecycle, subsystems, syscalls — is in [docs/KERNEL.md](./docs/KERNEL.md).
 
 The manifesto below renders the project's founding words — "des liens de liens de liens de liens de liens" — as the recursive causal chain it always was.
 
