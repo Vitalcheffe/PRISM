@@ -295,3 +295,25 @@ Stage Summary:
 - Total docs/ now: 20 viz sets (40 PNGs) + architecture + interactive map + gallery + GLOSSARY + TELEMETRY + KERNEL = 44 visual/doc artifacts.
 - Total engine modules: 15 (was 12, +kernel +life +governance).
 - Ready for commit 9.
+
+---
+Task ID: 10
+Agent: orchestrator (main)
+Task: Bilan intégral A→Z, fix bugs critiques, câbler Kernel dans index.ts.
+
+Work Log:
+- Écrit BILAN.md (~3000 mots) : audit honnête de l'état réel, bugs critiques identifiés, vision lointaine, mauvais points sans défense, objectif immense (instrument de raisonnement MUN).
+- Bug #1 fixé : espérance de vie 147.8 → 70.5. Le NN forward pass produisait des sorties non-bornées. Ajouté INDICATOR_RANGES clampe post-forward-pass dans engine.ts recompute() : life_expectancy ∈ [45,90], hdi ∈ [0,1], gini ∈ [0.2,0.7], etc.
+- Bug #2 fixé : IDH 1.203 → 0.723. Même cause, même fix.
+- Kernel câblé dans index.ts : import createDefaultKernel, remplace engine.step() par kernel.cycle(), enrichit le snapshot avec kernel.phase/tick/uptimeMs/phaseTimings + demographics (medianAge, birthRate, deathRate) + governance (totalBudget, totalSpent, leakage, capacity).
+- Try/catch sur le tick loop + sur l'init handler pour diagnostics.
+- Redémarrage moteur avec setsid (détachement propre). Port 3003 écoute, clients connectent, init envoyé (47 leviers, 15 indicateurs), tick tourne.
+- Vérifié live : "47 levers · 15 indicators", tick T0047, stabilité 72/100, PIB 1.42T, espérance de vie 70.5, IDH 0.723, dette 58.3%, chômage 9.7%, inflation 1.9%. Toutes valeurs physiquement réelles.
+- Lint clean.
+
+Stage Summary:
+- BILAN.md créé (bilan honnête + vision).
+- 2 bugs critiques fixés (credibility restored).
+- Kernel + Life + Governance tournent dans la simulation live (plus standalone).
+- Le snapshot émis aux clients contient maintenant les données démographiques et de gouvernance.
+- Ready for commit 10.

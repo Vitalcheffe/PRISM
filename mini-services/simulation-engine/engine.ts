@@ -326,6 +326,38 @@ export class SimulationEngine {
       indicators[INDICATORS[i].id] = outputs[i];
     }
 
+    // ── CLAMPE PHYSIQUE POST-RÉSEAU ──
+    // Le réseau de neurones produit des sorties linéaires non-bornées. Chaque
+    // indicateur a une plage physique réelle — une espérance de vie ne peut
+    // pas dépasser 90 ans, un IDH est dans [0, 1]. Sans ce clampe, le réseau
+    // peut produire des valeurs absurdes (espérance de vie 147 ans, IDH 1.2)
+    // qui détruisent la crédibilité du simulateur. On clampe ici, avant toute
+    // transformation non-linéaire, pour garantir que tous les indicateurs
+    // restent dans des plages physiquement possibles.
+    const INDICATOR_RANGES: Record<string, [number, number]> = {
+      gdp: [100, 5000],              // Mrd MAD (Maroc ~1300)
+      gdp_growth: [-15, 15],         // % par an
+      gdp_per_capita: [1000, 100000],// MAD/hab
+      unemployment: [0, 50],         // %
+      inflation: [-5, 50],           // %
+      debt_to_gdp: [0, 300],         // % (peut monter haut, cap à 300)
+      budget_deficit: [-200, 50],    // Mrd MAD
+      tax_revenue: [0, 1000],        // Mrd MAD
+      life_expectancy: [45, 90],     // années (physiquement possible)
+      hdi: [0, 1],                   // IDH défini sur [0, 1]
+      gini: [0.2, 0.7],              // coefficient de Gini plausible
+      balance_of_trade: [-100, 100], // Mrd MAD
+      poverty_rate: [0, 80],         // %
+      stability: [0, 95],            // score interne
+      revolution_risk: [0, 100],     // %
+    };
+    for (const id of Object.keys(indicators)) {
+      const range = INDICATOR_RANGES[id];
+      if (range) {
+        indicators[id] = Math.max(range[0], Math.min(range[1], indicators[id]));
+      }
+    }
+
     // Le PIB doit utiliser la dette accumulée pour debt_to_gdp
     const gdp = indicators.gdp ?? MACRO_CONSTANTS.gdp_baseline_mrd_mad;
     indicators.debt_to_gdp = (this.accumulatedDebt / gdp) * 100;

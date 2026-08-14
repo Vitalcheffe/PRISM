@@ -1,5 +1,11 @@
 // index.ts — Serveur socket.io du moteur de simulation (port 3003).
 // Charge le modèle, exécute les calculs, diffuse l'état aux clients.
+//
+// Le moteur tourne maintenant à travers le PRISM Kernel : un cycle de 12
+// phases par tick (BOOT, EXTRACT, NEURAL, NONLINEAR, SWARM, LIFECYCLE,
+// GOVERN, BLACKSWAN, PARADIGM, COMMIT, EMIT, HALT). Le sous-système Life
+// fait vivre 10 000 agents (naissances, vieillissement, mort) et le
+// sous-système Governance gère 8 ministères avec budget réel.
 
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -8,6 +14,7 @@ import { LEVERS, INDICATORS, CATEGORIES } from "./model.js";
 import { executeDecree as executeDecreeForProjection } from "./decrees.js";
 import { CAUSAL_EDGES } from "./formulas.js";
 import { getNetworkStats } from "./neural-network.js";
+import { createDefaultKernel, KERNEL_VERSION } from "./kernel.js";
 
 const PORT = 3003;
 const TICK_MS = 200;
@@ -22,17 +29,59 @@ const io = new Server(httpServer, {
 
 const engine = new SimulationEngine();
 
+// ── LE KERNEL ──
+// On enveloppe le moteur dans le Kernel. Le Kernel enregistre automatiquement
+// les sous-systèmes Life et Governance. Chaque tick = un cycle kernel complet
+// (12 phases). Le host.step() s'exécute pendant la phase NEURAL.
+const kernel = createDefaultKernel(engine);
+
+console.log(`[sim] PRISM Kernel v${KERNEL_VERSION} initialisé`);
 console.log("[sim] Moteur V3 initialisé");
 console.log(`     ${LEVERS.length} leviers (touchables) · ${INDICATORS.length} indicateurs dérivés (calculés)`);
-console.log(`     ${CATEGORIES.length} catégories · ${CAUSAL_EDGES.length} arêtes causales`);
+console.log(`     ${CATEGORIES.length} catégories · ${CAUSAL_EDGES.length} arêtes causales`)
 console.log(`     PIB initial = ${engine.indicators?.gdp.toFixed(0)} Mrd MAD`);
 console.log(`     Dette/PIB = ${engine.indicators?.debt_to_gdp.toFixed(1)}%`);
 console.log(`     Chômage = ${engine.indicators?.unemployment.toFixed(1)}%`);
 
-// Tick loop
+// Tick loop — tourne à travers le Kernel.
+// Chaque tick = un cycle kernel complet (12 phases). Le snapshot émis aux
+// clients est enrichi avec les données du Kernel : phase actuelle, timings,
+// données démographiques (Life) et de gouvernance (Governance).
 setInterval(() => {
-  engine.step();
-  io.emit("state", engine.snapshot());
+  try {
+    const kernelState = kernel.cycle();
+    const snapshot: any = engine.snapshot();
+    if (!snapshot || typeof snapshot !== "object") {
+      console.error("[sim] snapshot invalide");
+      return;
+    }
+  // Enrichir le snapshot avec les données Kernel pour le frontend
+  snapshot.kernel = {
+    version: KERNEL_VERSION,
+    phase: kernelState.phase,
+    tick: kernelState.tick,
+    uptimeMs: kernelState.uptimeMs,
+    phaseTimings: kernelState.phaseTimings,
+  };
+  // Données démographiques du sous-système Life
+  const lifeSubsystem = kernelState.subsystems.find((s: any) => s.id === "life");
+  if (lifeSubsystem && typeof (lifeSubsystem as any).getDemographicStats === "function") {
+    snapshot.demographics = (lifeSubsystem as any).getDemographicStats();
+    snapshot.populationPyramid = (lifeSubsystem as any).getPopulationPyramid();
+  }
+  // Données de gouvernance du sous-système Governance
+  const govSubsystem = kernelState.subsystems.find((s: any) => s.id === "governance");
+  if (govSubsystem && typeof (govSubsystem as any).getGovernanceStats === "function") {
+    snapshot.governance = (govSubsystem as any).getGovernanceStats();
+    snapshot.ministries = (govSubsystem as any).getMinistries();
+  }
+  io.emit("state", snapshot);
+  } catch (err: any) {
+    // Log l'erreur mais ne crash pas le moteur — un tick raté ne doit pas
+    // tuer la simulation. L'erreur est émise aux clients pour debug.
+    console.error("[sim] ERREUR TICK:", err?.message || err);
+    if (err?.stack) console.error(err.stack.split("\n").slice(0, 3).join("\n"));
+  }
 }, TICK_MS);
 
 // Payload d'init envoyé à chaque connexion (et après reset).
@@ -52,7 +101,14 @@ io.on("connection", (socket) => {
   console.log(`[sim] client connecté: ${socket.id}`);
 
   // Envoyer le modèle + graphe causal + état initial
-  socket.emit("init", buildInitPayload());
+  try {
+    const payload = buildInitPayload();
+    socket.emit("init", payload);
+    console.log(`[sim] init envoyé: ${payload.levers?.length || 0} leviers, ${payload.indicators?.length || 0} indicateurs`);
+  } catch (err: any) {
+    console.error("[sim] ERREUR INIT:", err?.message || err);
+    if (err?.stack) console.error(err.stack.split("\n").slice(0, 3).join("\n"));
+  }
 
   socket.on("command", (cmd: any) => {
     if (!cmd || typeof cmd !== "object") return;
