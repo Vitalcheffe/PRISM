@@ -317,3 +317,34 @@ Stage Summary:
 - Kernel + Life + Governance tournent dans la simulation live (plus standalone).
 - Le snapshot émis aux clients contient maintenant les données démographiques et de gouvernance.
 - Ready for commit 10.
+
+---
+Task ID: 11
+Agent: orchestrator (main)
+Task: Tout mettre en relation — frontend live connecté au Kernel/Life/Governance.
+
+Work Log:
+- Étendu sim-types.ts : ajouté champs optionnels kernel, demographics, populationPyramid, governance, ministries au SimState.
+- Étendu use-simulation.ts : View type étendu avec "kernel" | "life" | "governance".
+- Créé 3 nouveaux composants frontend :
+  · KernelView.tsx : 12 phases en cercle SVG, phase active brillante, timings par phase, syscalls.
+  · LifeView.tsx : pyramide démographique SVG, 7 life stages colorés, stats (âge médian, birth/death rate, dependency), heartbeat line.
+  · GovernanceView.tsx : 8 ministères avec budget bars + spent bars + efficiency/leakage stats, summary (total budget, leakage, corruption index).
+- Ajouté les 3 vues au ViewSwitcher (9 tabs maintenant) et au page.tsx rendering.
+- Bug critique fixé #1 : socket.io path "/" cassait le handshake EIO v4. Corrigé vers path par défaut "/socket.io/".
+- Bug critique fixé #2 : le client socket.io utilisait io("/?XTransformPort=3003") qui ne fonctionnait pas. Corrigé vers io({path:"/socket.io/", query:{XTransformPort:"3003"}, transports:["polling"]}) — polling uniquement car la gateway Caddy ne forward pas les WS upgrades avec query params.
+- Bug critique fixé #3 : le LifeSystem avait une fuite mémoire (population croissait 10000→10263 en 50 ticks → OOM). Corrigé : naissances de remplacement seulement pour les décès NETS (deaths - births), pas un remplacement par décès.
+- Bug critique fixé #4 : io.emit("state", snapshot) crashait silencieusement à cause d'une référence circulaire dans le snapshot (swarm ou hostSnapshot). Corrigé : deep clone JSON avant emit, avec fallback snapshot minimal si JSON.stringify échoue.
+- Bug critique fixé #5 : io.emit("init", payload) crashait aussi. Corrigé : deep clone JSON du payload init avant emit.
+- Bug critique fixé #6 : le handler HTTP custom interférait avec socket.io. Corrigé : handler simplifié qui laisse socket.io gérer /socket.io/* nativement.
+- Vérifié live : T0181, 47 levers, 15 indicators, stabilité 73/100, PIB 1.44T.
+- KernelView : "PRISM KERNEL V1.0.0 · tick 181 · uptime 36.2s · phase active: EMIT" + timings (NEURAL 1.9ms, LIFECYCLE 1.5ms, GOVERN 0.03ms).
+- LifeView : "population 10,016 · âge médian 30.0" + 7 life stages + pyramide.
+- GovernanceView : "8 ministères · budget 500 Mrd MAD" + chaque ministère avec budget/efficiency/leakage.
+- Lint clean. Moteur stable (survit 30s+, heap 12-46MB, GC marche).
+
+Stage Summary:
+- 3 nouvelles vues frontend live avec données kernel/life/governance réelles.
+- 6 bugs critiques fixés (socket.io path, memory leak, circular refs, HTTP handler).
+- Le frontend est maintenant connecté au Kernel — la vie, la gestion, et le battement sont visibles en temps réel.
+- Ready for commit 11.

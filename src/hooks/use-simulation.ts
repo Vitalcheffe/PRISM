@@ -23,7 +23,7 @@ import type {
   ProjectionResult,
 } from "@/lib/sim-types";
 
-export type View = "panneau" | "metrics" | "methodology" | "network" | "timeline" | "neural";
+export type View = "panneau" | "metrics" | "methodology" | "network" | "timeline" | "neural" | "kernel" | "life" | "governance";
 
 // --- Résultat d'un apprentissage (commande `learn`) ---
 //
@@ -176,14 +176,20 @@ export const useSimulation = create<SimulationState>((set, get) => ({
     inited = true;
     set({ connecting: true });
 
-    socket = io("/?XTransformPort=3003", {
-      transports: ["websocket", "polling"],
+    socket = io({
+      path: "/socket.io/",
+      // Polling uniquement — la gateway Caddy ne forward pas correctement
+      // les WebSocket upgrades avec le query param XTransformPort.
+      // Le polling à 200ms est suffisant pour un tick de simulation de 200ms.
+      transports: ["polling"],
       forceNew: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 800,
       reconnectionDelayMax: 5000,
       timeout: 10000,
+      // La gateway Caddy route via le query param XTransformPort=3003.
+      query: { XTransformPort: "3003" },
     });
 
     socket.on("connect", () => {

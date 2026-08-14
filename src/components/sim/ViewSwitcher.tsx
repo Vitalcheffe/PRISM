@@ -9,6 +9,9 @@ const TABS: { id: View; label: string }[] = [
   { id: "neural", label: "Neural" },
   { id: "metrics", label: "Metrics" },
   { id: "timeline", label: "Timeline" },
+  { id: "kernel", label: "Kernel" },
+  { id: "life", label: "Life" },
+  { id: "governance", label: "Govern" },
   { id: "methodology", label: "Methodology" },
 ];
 

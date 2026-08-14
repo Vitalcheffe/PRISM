@@ -33,6 +33,9 @@ import { NeuralView } from "@/components/sim/NeuralView";
 import { TimelineView } from "@/components/sim/TimelineView";
 import { MetricsView } from "@/components/sim/MetricsView";
 import { MethodologyView } from "@/components/sim/MethodologyView";
+import { KernelView } from "@/components/sim/KernelView";
+import { LifeView } from "@/components/sim/LifeView";
+import { GovernanceView } from "@/components/sim/GovernanceView";
 import { LeverDetail } from "@/components/sim/LeverDetail";
 import { GameOverlay } from "@/components/sim/GameOverlay";
 import { GenesisModal } from "@/components/sim/GenesisModal";
@@ -73,6 +76,9 @@ export default function Home() {
           {view === "neural" && <NeuralView />}
           {view === "timeline" && <TimelineView />}
           {view === "metrics" && <MetricsView />}
+          {view === "kernel" && <KernelView />}
+          {view === "life" && <LifeView />}
+          {view === "governance" && <GovernanceView />}
           {view === "methodology" && <MethodologyView />}
         </section>
 

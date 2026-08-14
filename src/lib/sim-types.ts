@@ -156,6 +156,56 @@ export interface SimState {
   // ÉQUILIBRE THERMODYNAMIQUE SOCIAL
   thermodynamicBalance: number; // 0 = chaotique, 1 = équilibré
   overoptimizedCount: number; // nombre de leviers sur-optimisés (>90%)
+
+  // ── LE KERNEL ──
+  // Émis par le serveur après le commit 10. Le Kernel orchestre 12 phases
+  // par tick. Ces données permettent au frontend d'afficher la phase active,
+  // l'uptime, et les timings de chaque phase.
+  kernel?: {
+    version: string;
+    phase: string;
+    tick: number;
+    uptimeMs: number;
+    phaseTimings: Record<string, number>;
+  } | null;
+
+  // ── SYSTÈME DE VIE (sous-système Life) ──
+  // Démographie : 10 000 agents vivent, vieillissent, meurent.
+  demographics?: {
+    medianAge: number;
+    birthRate: number;
+    deathRate: number;
+    dependencyRatio: number;
+    populationGrowth: number;
+    population: number;
+  } | null;
+  populationPyramid?: Array<{
+    ageGroup: string;
+    male: number;
+    female: number;
+  }> | null;
+
+  // ── SYSTÈME DE GESTION (sous-système Governance) ──
+  // L'État gère 8 ministères avec budget réel.
+  governance?: {
+    totalBudget: number;
+    totalSpent: number;
+    totalLeakage: number;
+    avgCapacity: number;
+    avgServiceQuality: number;
+    avgEfficiency: number;
+    corruptionIndex: number;
+  } | null;
+  ministries?: Array<{
+    id: string;
+    name: string;
+    allocatedBudget: number;
+    spentBudget: number;
+    capacity: number;
+    serviceQuality: number;
+    efficiency: number;
+    leakage: number;
+  }> | null;
 }
 
 export interface InitPayload {

@@ -339,17 +339,21 @@ export class LifeSystem implements Subsystem {
       }
     }
 
-    // Stabilité de la population : un décès → une naissance de remplacement
-    for (const deadId of deceased) {
+    // Stabilité de la population : compenser les décès NETS par des naissances
+    // de remplacement. Si births >= deaths ce tick, pas besoin de remplacement
+    // (les naissances de reproduction couvrent déjà). Sinon, on crée des
+    // nourrissons pour maintenir la population stable.
+    // Cela évite la croissance infinie de la Map (OOM) et garde la démographie
+    // réaliste : population ~constante, remplacement naturel.
+    const netDeaths = Math.max(0, deaths - births);
+    for (let i = 0; i < netDeaths; i++) {
       this.createInfant(currentTick);
-      // Le profil du mort reste dans la map (marqué DECEASED) pour l'historique,
-      // mais on peut recycler son id pour le nouvel enfant.
-      // Ici on crée un nouvel id pour préserver l'historique.
     }
 
-    // Nettoyer les profils décédés anciens (garder les 1000 derniers pour stats)
-    if (this.profiles.size > this.agentCount * 1.2) {
-      this.pruneDeceased(1000);
+    // Nettoyer les profils décédés anciens (garder les 500 derniers pour stats)
+    // Plus agressif pour éviter la croissance de la Map.
+    if (this.profiles.size > this.agentCount + 500) {
+      this.pruneDeceased(500);
     }
 
     // Comptabiliser naissances/décès

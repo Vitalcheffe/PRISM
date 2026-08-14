@@ -19,9 +19,20 @@ import { createDefaultKernel, KERNEL_VERSION } from "./kernel.js";
 const PORT = 3003;
 const TICK_MS = 200;
 
+// Capturer les erreurs non-catchées pour diagnostic (ne pas crasher silencieusement)
+process.on("uncaughtException", (err: any) => {
+  console.error("[sim] UNCAUGHT EXCEPTION:", err?.message || err);
+  if (err?.stack) console.error(err.stack.split("\n").slice(0, 5).join("\n"));
+});
+process.on("unhandledRejection", (err: any) => {
+  console.error("[sim] UNHANDLED REJECTION:", err?.message || err);
+});
+
 const httpServer = createServer();
 const io = new Server(httpServer, {
-  path: "/",
+  // path par défaut "/socket.io/" — le handler custom ci-dessous route
+  // les requêtes vers ce path vers socket.io. NE PAS utiliser path:"/" car
+  // cela casse le handshake EIO v4 (le client polling va sur /socket.io/).
   cors: { origin: "*", methods: ["GET", "POST"] },
   pingTimeout: 60000,
   pingInterval: 25000,
@@ -55,34 +66,82 @@ setInterval(() => {
       console.error("[sim] snapshot invalide");
       return;
     }
-  // Enrichir le snapshot avec les données Kernel pour le frontend
+  // Enrichir le snapshot avec les données Kernel pour le frontend.
+  // Toutes les données ajoutées sont sérialisées en JSON puis re-parsées
+  // pour éliminer toute référence circulaire ou méthode non-sérialisable.
   snapshot.kernel = {
     version: KERNEL_VERSION,
-    phase: kernelState.phase,
-    tick: kernelState.tick,
-    uptimeMs: kernelState.uptimeMs,
-    phaseTimings: kernelState.phaseTimings,
+    phase: String(kernelState.phase),
+    tick: Number(kernelState.tick) || 0,
+    uptimeMs: Number(kernelState.uptimeMs) || 0,
+    phaseTimings: { ...kernelState.phaseTimings },
   };
   // Données démographiques du sous-système Life
   const lifeSubsystem = kernelState.subsystems.find((s: any) => s.id === "life");
   if (lifeSubsystem && typeof (lifeSubsystem as any).getDemographicStats === "function") {
-    snapshot.demographics = (lifeSubsystem as any).getDemographicStats();
-    snapshot.populationPyramid = (lifeSubsystem as any).getPopulationPyramid();
+    try {
+      snapshot.demographics = (lifeSubsystem as any).getDemographicStats();
+      snapshot.populationPyramid = (lifeSubsystem as any).getPopulationPyramid();
+    } catch (e) {
+      // Life subsystem peut ne pas être prêt
+    }
   }
   // Données de gouvernance du sous-système Governance
   const govSubsystem = kernelState.subsystems.find((s: any) => s.id === "governance");
   if (govSubsystem && typeof (govSubsystem as any).getGovernanceStats === "function") {
-    snapshot.governance = (govSubsystem as any).getGovernanceStats();
-    snapshot.ministries = (govSubsystem as any).getMinistries();
+    try {
+      snapshot.governance = (govSubsystem as any).getGovernanceStats();
+      snapshot.ministries = (govSubsystem as any).getMinistries();
+    } catch (e) {
+      // Governance subsystem peut ne pas être prêt
+    }
   }
-  io.emit("state", snapshot);
+  // Deep clone JSON pour éliminer les références circulaires avant l'emit.
+  // Si JSON.stringify échoue (référence circulaire), on émet un snapshot minimal.
+  let emitPayload: any;
+  try {
+    emitPayload = JSON.parse(JSON.stringify(snapshot));
+  } catch (cloneErr) {
+    // Snapshot minimal sans les données potentiellement circulaires
+    emitPayload = {
+      tick: snapshot.tick,
+      levers: { ...snapshot.levers },
+      leverStates: { ...snapshot.leverStates },
+      leverVelocities: { ...snapshot.leverVelocities },
+      indicators: { ...snapshot.indicators },
+      indicatorStates: { ...snapshot.indicatorStates },
+      metrics: Array.isArray(snapshot.metrics) ? [...snapshot.metrics] : [],
+      ripples: Array.isArray(snapshot.ripples) ? [...snapshot.ripples] : [],
+      alerts: Array.isArray(snapshot.alerts) ? [...snapshot.alerts] : [],
+      paused: snapshot.paused,
+      gameOver: snapshot.gameOver,
+      history: {},
+      accumulatedDebt: snapshot.accumulatedDebt,
+      networkStats: snapshot.networkStats ? { ...snapshot.networkStats } : null,
+      paradigm: snapshot.paradigm,
+      swarm: null,
+      lastBlackSwan: snapshot.lastBlackSwan ? { ...snapshot.lastBlackSwan } : null,
+      thermodynamicBalance: snapshot.thermodynamicBalance,
+      overoptimizedCount: snapshot.overoptimizedCount,
+      kernel: snapshot.kernel,
+      demographics: snapshot.demographics,
+      populationPyramid: snapshot.populationPyramid,
+      governance: snapshot.governance,
+      ministries: snapshot.ministries,
+    };
+  }
+  io.emit("state", emitPayload);
   } catch (err: any) {
-    // Log l'erreur mais ne crash pas le moteur — un tick raté ne doit pas
-    // tuer la simulation. L'erreur est émise aux clients pour debug.
     console.error("[sim] ERREUR TICK:", err?.message || err);
     if (err?.stack) console.error(err.stack.split("\n").slice(0, 3).join("\n"));
   }
 }, TICK_MS);
+
+// Log de survie toutes les 30s pour confirmer que le tick loop tourne
+setInterval(() => {
+  const mem = process.memoryUsage();
+  console.log(`[sim] alive · heap ${Math.round(mem.heapUsed/1024/1024)}MB · clients ${io.engine?.clientsCount ?? 0}`);
+}, 30000);
 
 // Payload d'init envoyé à chaque connexion (et après reset).
 // `edges` expose le graphe causal entre leviers pour le rendu du globe.
@@ -103,8 +162,10 @@ io.on("connection", (socket) => {
   // Envoyer le modèle + graphe causal + état initial
   try {
     const payload = buildInitPayload();
-    socket.emit("init", payload);
-    console.log(`[sim] init envoyé: ${payload.levers?.length || 0} leviers, ${payload.indicators?.length || 0} indicateurs`);
+    // Deep clone JSON pour éliminer les références circulaires
+    const safePayload = JSON.parse(JSON.stringify(payload));
+    socket.emit("init", safePayload);
+    console.log(`[sim] init envoyé: ${safePayload.levers?.length || 0} leviers, ${safePayload.indicators?.length || 0} indicateurs`);
   } catch (err: any) {
     console.error("[sim] ERREUR INIT:", err?.message || err);
     if (err?.stack) console.error(err.stack.split("\n").slice(0, 3).join("\n"));
@@ -198,27 +259,22 @@ io.on("connection", (socket) => {
 });
 
 // --- Endpoint HTTP pour sauvegarder/charger les poids du MLP ---
-// socket.io utilise le path "/" — on intercepte les requêtes AVANT socket.io
-// en ajoutant notre handler avec priorité.
-
-const originalListeners = httpServer.listeners("request");
-httpServer.removeAllListeners("request");
+// socket.io utilise le path par défaut "/socket.io/" — on intercepte
+// SEULEMENT les requêtes /api/* et /, en laissant socket.io gérer /socket.io/*
+// nativement (sans handler custom qui interfère).
 
 httpServer.on("request", (req, res) => {
-  // CORS
+  const url = req.url || "";
+
+  // Laisser socket.io gérer ses propres requêtes (polling + websocket)
+  if (url.startsWith("/socket.io")) {
+    return; // socket.io a déjà enregistré son handler
+  }
+
+  // CORS pour les API REST
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  // Laisser socket.io gérer les requêtes WebSocket et polling
-  const url = req.url || "";
-  if (url.startsWith("/socket.io") || url === "/" || req.headers.upgrade === "websocket") {
-    // Passer aux listeners originaux (socket.io)
-    for (const listener of originalListeners) {
-      listener.call(httpServer, req, res);
-    }
-    return;
-  }
 
   if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
 
@@ -286,10 +342,9 @@ httpServer.on("request", (req, res) => {
     return;
   }
 
-  // Pour toute autre requête, passer aux listeners originaux
-  for (const listener of originalListeners) {
-    listener.call(httpServer, req, res);
-  }
+  // Pour toute autre requête non gérée, répondre 404
+  res.writeHead(404, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ error: "Not found", url }));
 });
 
 httpServer.listen(PORT, () => {
