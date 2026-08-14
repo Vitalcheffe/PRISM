@@ -318,6 +318,19 @@ J'ai remarqué que même si tu donnes une idée au même agent, sauf que si tu l
   <img alt="Paradigm shift — weight matrix rewrite" src="docs/paradigm-shift-light.png" width="100%">
 </picture>
 
+> And the shift is not abstract. Below is the same causal graph, three times:
+> before the regime change, the delta of what changed, and after. Edges were
+> removed. Edges were added. Edges flipped polarity. The delta column is the
+> honest accounting — this is what "switching paradigm" actually means at
+> the weight level. The system does not agree with the new regime; it computes
+> what follows from it.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/paradigm-delta-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/paradigm-delta-light.png">
+  <img alt="Paradigm delta — before / shift / after" src="docs/paradigm-delta-light.png" width="100%">
+</picture>
+
 ---
 
 ### Don't hardcode — let the system learn
@@ -355,6 +368,17 @@ Crée un vrai système. Une vraie logique. Une vraie méthodologie. Si je dois p
 
 ## Epilogue — The Dream, Realized
 
+> The system compresses. Twelve World Bank reports, forty hours of reading,
+> 1.25 million tokens — all of it distilled into twenty causal edges the
+> engine traverses in milliseconds. The graph is the corpus, reduced to what
+> matters. This is the token economy: read only what matters.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/token-economy-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/token-economy-light.png">
+  <img alt="Token economy — 571× compression" src="docs/token-economy-light.png" width="100%">
+</picture>
+
 > The words below were spoken before any of this existed. They described a
 > mind that could not hold its own vision — "j'imagine deux ridicules de le
 > lendemain, j'oublie tout." The system is the externalization of that mind.
@@ -369,5 +393,9 @@ Crée un vrai système. Une vraie logique. Une vraie méthodologie. Si je dois p
   <img alt="Manifesto — des liens de liens de liens de liens de liens" src="docs/manifesto-light.png" width="100%">
 </picture>
 
-> The complete visual system — all thirteen diagrams, dark and light —
-> is collected in [docs/gallery.html](./docs/gallery.html).
+> The complete visual system — sixteen diagrams, dark and light, plus a
+> navigable codebase map — is collected in [docs/gallery.html](./docs/gallery.html).
+> The interactive architecture map lives at
+> [docs/architecture-interactive.html](./docs/architecture-interactive.html).
+> Every term used above is pinned in [docs/GLOSSARY.md](./docs/GLOSSARY.md);
+> every engine signal is documented in [docs/TELEMETRY.md](./docs/TELEMETRY.md).

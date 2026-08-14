@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRISM — Architecture Map</title>
+<style>
+:root{
+  --bg:#0d1117;
+  --text:#f0f6fc;
+  --secondary:#8b949e;
+  --tertiary:#6e7681;
+  --border:#21262d;
+  --surface:#161b22;
+  --amber:#f59e0b;
+  --amber-soft:rgba(245,158,11,0.04);
+  --dot-color:rgba(245,158,11,0.04);
+  --panel-bg:rgba(22,27,34,0.92);
+  --edge-import:rgba(245,158,11,0.30);
+  --edge-flow:rgba(245,158,11,0.22);
+  --node-fill:#0d1117;
+}
+[data-theme="light"]{
+  --bg:#ffffff;
+  --text:#1A1A1A;
+  --secondary:#737373;
+  --tertiary:#A3A3A3;
+  --border:#e5e5e5;
+  --surface:#fafafa;
+  --amber:#f59e0b;
+  --amber-soft:rgba(245,158,11,0.05);
+  --dot-color:rgba(0,0,0,0.03);
+  --panel-bg:rgba(250,250,250,0.92);
+  --edge-import:rgba(245,158,11,0.38);
+  --edge-flow:rgba(245,158,11,0.30);
+  --node-fill:#ffffff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  transition:background-color 0.25s ease,color 0.25s ease;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:radial-gradient(circle,var(--dot-color) 1px,transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+  z-index:0;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  opacity:0.015;
+  pointer-events:none;
+  z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============ TOP BAR ============ */
+.topbar{
+  flex:none;
+  height:48px;
+  display:flex;
+  align-items:center;
+  padding:0 20px;
+  gap:18px;
+  border-bottom:1px solid var(--border);
+  background:var(--panel-bg);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  z-index:10;
+}
+.brand{
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:-0.01em;
+  white-space:nowrap;
+  color:var(--text);
+}
+.brand .sep{color:var(--tertiary);margin:0 8px;font-weight:400}
+.brand .sub{
+  color:var(--secondary);
+  font-weight:400;
+  font-family:'SF Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.12em;
+}
+.filters{display:flex;gap:6px;align-items:center}
+.chip{
+  font-size:10px;
+  font-family:'SF Mono',monospace;
+  color:var(--secondary);
+  background:transparent;
+  border:1px solid var(--border);
+  padding:4px 9px;
+  cursor:pointer;
+  letter-spacing:0.08em;
+  transition:all 0.15s ease;
+  white-space:nowrap;
+}
+.chip:hover{border-color:var(--amber);color:var(--amber)}
+.chip.active{background:var(--amber);color:#0d1117;border-color:var(--amber)}
+[data-theme="light"] .chip.active{color:#ffffff}
+.right-controls{margin-left:auto;display:flex;align-items:center;gap:10px}
+.search{display:flex;align-items:center;gap:8px;position:relative}
+.search input{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:'SF Mono',monospace;
+  font-size:11px;
+  padding:5px 10px;
+  width:170px;
+  outline:none;
+  transition:border-color 0.15s ease;
+}
+.search input:focus{border-color:var(--amber)}
+.search input::placeholder{color:var(--tertiary)}
+.toggle{
+  background:none;
+  border:1px solid var(--border);
+  color:var(--text);
+  cursor:pointer;
+  padding:5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:border-color 0.15s ease, color 0.15s ease;
+}
+.toggle:hover{border-color:var(--amber);color:var(--amber)}
+.toggle svg{width:14px;height:14px;display:block}
+.toggle .icon-sun{display:none}
+[data-theme="light"] .toggle .icon-sun{display:block}
+[data-theme="light"] .toggle .icon-moon{display:none}
+
+/* ============ MAIN ============ */
+.main{
+  flex:1;
+  display:flex;
+  overflow:hidden;
+  min-height:0;
+  z-index:1;
+}
+.canvas-area{
+  flex:1;
+  position:relative;
+  overflow:hidden;
+}
+.canvas-area svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* ============ PANEL ============ */
+.panel{
+  width:320px;
+  border-left:1px solid var(--border);
+  background:var(--panel-bg);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  display:flex;
+  flex-direction:column;
+  transition:width 0.25s ease, transform 0.25s ease;
+  overflow:hidden;
+}
+.panel.collapsed{width:0;border-left:none}
+.panel-inner{
+  width:320px;
+  height:100%;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+.panel-empty{
+  padding:60px 24px;
+  text-align:center;
+  color:var(--tertiary);
+  font-family:'SF Mono',monospace;
+  font-size:11px;
+  line-height:1.8;
+  letter-spacing:0.05em;
+}
+.panel-empty .glyph{
+  font-size:28px;
+  color:var(--border);
+  margin-bottom:14px;
+  letter-spacing:0;
+}
+.panel-empty .hint{
+  margin-top:16px;
+  font-size:10px;
+  color:var(--tertiary);
+  opacity:0.75;
+  line-height:1.7;
+}
+.panel-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  padding:22px 22px 14px;
+  border-bottom:1px solid var(--border);
+  gap:12px;
+}
+.panel-header .meta-top{
+  font-family:'SF Mono',monospace;
+  font-size:9px;
+  color:var(--tertiary);
+  letter-spacing:0.2em;
+  margin-bottom:6px;
+}
+.panel-header .filename{
+  font-family:'SF Mono',monospace;
+  font-size:14px;
+  color:var(--text);
+  word-break:break-all;
+  line-height:1.3;
+}
+.panel-header .size{
+  font-family:'SF Mono',monospace;
+  font-size:10px;
+  color:var(--tertiary);
+  letter-spacing:0.12em;
+  margin-top:5px;
+}
+.panel-close{
+  background:none;
+  border:none;
+  color:var(--tertiary);
+  font-size:20px;
+  cursor:pointer;
+  padding:0 2px;
+  line-height:1;
+  transition:color 0.15s ease;
+  flex-shrink:0;
+}
+.panel-close:hover{color:var(--text)}
+.panel-body{padding:18px 22px 24px;display:flex;flex-direction:column;gap:20px}
+.panel-section .label{
+  font-family:'SF Mono',monospace;
+  font-size:9px;
+  color:var(--tertiary);
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.panel-section .role{
+  font-size:13px;
+  color:var(--secondary);
+  line-height:1.55;
+}
+.list{display:flex;flex-direction:column}
+.list-item{
+  font-family:'SF Mono',monospace;
+  font-size:11px;
+  color:var(--secondary);
+  padding:6px 0;
+  cursor:pointer;
+  transition:color 0.15s ease;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.list-item:hover{color:var(--amber)}
+.list-item:last-child{border-bottom:none}
+.list-item .arrow-glyph{color:var(--tertiary);flex-shrink:0}
+.list-item:hover .arrow-glyph{color:var(--amber)}
+.list-empty{
+  font-family:'SF Mono',monospace;
+  font-size:11px;
+  color:var(--tertiary);
+  font-style:italic;
+  padding:6px 0;
+}
+.trace-buttons{display:flex;gap:6px}
+.trace-btn{
+  flex:1;
+  font-family:'SF Mono',monospace;
+  font-size:10px;
+  color:var(--secondary);
+  background:transparent;
+  border:1px solid var(--border);
+  padding:8px 6px;
+  cursor:pointer;
+  letter-spacing:0.12em;
+  transition:all 0.15s ease;
+}
+.trace-btn:hover{border-color:var(--amber);color:var(--amber)}
+.trace-btn.active{background:var(--amber);color:#0d1117;border-color:var(--amber)}
+[data-theme="light"] .trace-btn.active{color:#ffffff}
+.trace-clear{
+  font-family:'SF Mono',monospace;
+  font-size:10px;
+  color:var(--tertiary);
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  padding:8px 0 0;
+  letter-spacing:0.15em;
+  transition:color 0.15s ease;
+  text-align:left;
+}
+.trace-clear:hover{color:var(--amber)}
+.trace-info{
+  font-family:'SF Mono',monospace;
+  font-size:10px;
+  color:var(--tertiary);
+  margin-top:8px;
+  line-height:1.5;
+  letter-spacing:0.05em;
+}
+
+/* ============ SVG NODE/EDGE STYLES ============ */
+.node{cursor:pointer;transition:opacity 0.2s ease}
+.node rect{
+  fill:var(--node-fill);
+  stroke:var(--border);
+  stroke-width:1;
+  transition:stroke 0.15s ease, filter 0.15s ease, stroke-width 0.15s ease;
+}
+.node text{
+  fill:var(--text);
+  font-family:'SF Mono',monospace;
+  font-size:12px;
+  pointer-events:none;
+  user-select:none;
+}
+.node.engine text{
+  font-size:13px;
+  font-weight:500;
+}
+.node:hover rect,
+.node.hovered rect{
+  stroke:var(--amber);
+  filter:drop-shadow(0 0 6px rgba(245,158,11,0.4));
+}
+.node.dimmed{opacity:0.18}
+.node.highlighted rect{
+  stroke:var(--amber);
+  filter:drop-shadow(0 0 8px rgba(245,158,11,0.45));
+}
+.node.trace-highlight rect{
+  stroke:var(--amber);
+  stroke-width:1.5;
+  filter:drop-shadow(0 0 10px rgba(245,158,11,0.55));
+}
+.node.engine rect{
+  stroke:rgba(245,158,11,0.35);
+}
+.node.engine:hover rect,
+.node.engine.hovered rect{
+  stroke:var(--amber);
+  filter:drop-shadow(0 0 10px rgba(245,158,11,0.5));
+}
+.edge{transition:opacity 0.2s ease}
+.edge.dimmed{opacity:0.06}
+.edge.highlighted{opacity:1}
+
+.lane-label{
+  font-family:'SF Mono',monospace;
+  font-size:10px;
+  fill:var(--tertiary);
+  letter-spacing:0.22em;
+  pointer-events:none;
+  user-select:none;
+}
+.lane-guide{
+  stroke:var(--border);
+  stroke-width:1;
+  stroke-dasharray:2,6;
+  opacity:0.5;
+  pointer-events:none;
+}
+
+/* ============ LEGEND ============ */
+.legend{
+  position:absolute;
+  bottom:14px;
+  left:20px;
+  font-family:'SF Mono',monospace;
+  font-size:10px;
+  color:var(--tertiary);
+  letter-spacing:0.08em;
+  display:flex;
+  gap:18px;
+  align-items:center;
+  z-index:2;
+  pointer-events:none;
+  background:var(--panel-bg);
+  padding:6px 12px;
+  border:1px solid var(--border);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.legend .item{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.legend .swatch-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.legend .swatch-arrow{color:var(--amber);font-size:11px}
+.legend .swatch-dash{
+  width:18px;height:0;
+  border-top:1px dashed var(--amber);
+  opacity:0.7;
+}
+.legend .hint-text{color:var(--tertiary);opacity:0.7}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:900px){
+  .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;gap:8px}
+  .brand{font-size:12px;flex:1}
+  .filters{order:3;width:100%;overflow-x:auto;padding-bottom:2px}
+  .chip{padding:3px 7px;font-size:9px}
+  .right-controls{margin-left:0}
+  .search input{width:110px;font-size:10px}
+  .main{flex-direction:column}
+  .canvas-area{flex:1 1 58vh;min-height:200px}
+  .panel{
+    width:100%;
+    border-left:none;
+    border-top:1px solid var(--border);
+    flex:0 0 42vh;
+    max-height:42vh;
+  }
+  .panel.collapsed{max-height:0;border-top:none;flex:0 0 0}
+  .panel-inner{width:100%}
+  .legend{
+    font-size:9px;gap:10px;
+    bottom:8px;left:8px;
+    padding:5px 8px;
+    flex-wrap:wrap;
+  }
+  .lane-label{font-size:9px;letter-spacing:0.15em}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">PRISM<span class="sep">·</span><span class="sub">ARCHITECTURE MAP</span></div>
+  <div class="filters" id="filters">
+    <button class="chip" data-lane="1">01 EXTRACT</button>
+    <button class="chip" data-lane="2">02 NEURAL</button>
+    <button class="chip" data-lane="3">03 NONLINEAR</button>
+    <button class="chip" data-lane="4">04 SWARM</button>
+    <button class="chip" data-lane="5">05 BLACKSWAN</button>
+    <button class="chip" data-lane="6">06 VIZ</button>
+  </div>
+  <div class="right-controls">
+    <div class="search">
+      <input type="text" id="search" placeholder="filter nodes..." autocomplete="off" spellcheck="false">
+    </div>
+    <button class="toggle" id="themeToggle" aria-label="Toggle color theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="canvas-area">
+    <svg id="graph" viewBox="0 0 1280 640" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend">
+      <div class="item"><span class="swatch-dot"></span>file node</div>
+      <div class="item"><span class="swatch-arrow">→</span>import</div>
+      <div class="item"><span class="swatch-dash"></span>data flow</div>
+      <div class="item hint-text">click to inspect · hover to isolate</div>
+    </div>
+  </div>
+  <aside class="panel" id="panel">
+    <div class="panel-inner">
+      <div class="panel-empty" id="panelEmpty">
+        <div class="glyph">◇</div>
+        Select a node to inspect
+        <div class="hint">click any pill to see imports, dependents, and trace its upstream / downstream reach · hover to isolate · use the lane chips to filter by pipeline stage</div>
+      </div>
+      <div id="panelContent" style="display:none">
+        <div class="panel-header">
+          <div>
+            <div class="meta-top" id="pLane"></div>
+            <div class="filename" id="pFilename"></div>
+            <div class="size" id="pSize"></div>
+          </div>
+          <button class="panel-close" id="panelClose" aria-label="Close panel">×</button>
+        </div>
+        <div class="panel-body">
+          <div class="panel-section">
+            <div class="label">Role</div>
+            <div class="role" id="pRole"></div>
+          </div>
+          <div class="panel-section">
+            <div class="label">Imports · <span id="pImportsCount">0</span></div>
+            <div class="list" id="pImports"></div>
+          </div>
+          <div class="panel-section">
+            <div class="label">Imported by · <span id="pImportedByCount">0</span></div>
+            <div class="list" id="pImportedBy"></div>
+          </div>
+          <div class="panel-section">
+            <div class="label">Trace reach</div>
+            <div class="trace-buttons">
+              <button class="trace-btn" id="traceUp">↑ UPSTREAM</button>
+              <button class="trace-btn" id="traceDown">↓ DOWNSTREAM</button>
+            </div>
+            <button class="trace-clear" id="traceClear" style="display:none">CLEAR TRACE</button>
+            <div class="trace-info" id="traceInfo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ============================================================
+// DATA — the real PRISM codebase graph (grounded in source)
+// ============================================================
+const NODES = [
+  { id:'causal-extractor', name:'causal-extractor.ts',     lane:1, x:100,  y:320, w:188, h:30, size:'9.5KB',  role:'LLM pipeline · URL → ExtractedEdge → SQLite · 115-entry keyword map' },
+  { id:'model-loader',     name:'model-loader.ts',         lane:2, x:300,  y:130, w:148, h:28, size:'0.6KB',  role:'Loads trained NeuralWeight from DB · supplies the network on boot' },
+  { id:'neural-network',   name:'neural-network.ts',       lane:2, x:300,  y:215, w:172, h:30, size:'14KB',   role:'MLP 47→32→32→15 · 3,008 weights · forwardPass + train · He init, ReLU, SGD+momentum' },
+  { id:'formulas',         name:'formulas.ts',             lane:2, x:300,  y:305, w:122, h:28, size:'31KB',   role:'Economic formulas · the neural network\'s teacher · CAUSAL_EDGES array · computeGDP, computeAllIndicators' },
+  { id:'model',            name:'model.ts',                lane:2, x:300,  y:395, w:96,  h:28, size:'26KB',   role:'47 LEVERS · 15 INDICATORS · 8 CATEGORIES · MACRO_CONSTANTS · LEVER_BY_ID · the data layer' },
+  { id:'nonlinear',        name:'nonlinear.ts',            lane:3, x:500,  y:260, w:128, h:28, size:'7.6KB',  role:'7 non-linear layers · applyNonLinear() · thresholds → equilibrium' },
+  { id:'paradigm',         name:'paradigm.ts',             lane:3, x:500,  y:360, w:118, h:28, size:'7.8KB',  role:'5 regimes · weight matrix rewrite · applyParadigm() · polarity inversion' },
+  { id:'agent-swarm',      name:'agent-swarm.ts',          lane:4, x:700,  y:310, w:152, h:30, size:'14.8KB', role:'10,000 agents · 8 factions · updateAgents() · trust, stress, capital, mobility' },
+  { id:'black-swan',       name:'black-swan.ts',           lane:5, x:900,  y:310, w:138, h:28, size:'10.6KB', role:'10 crisis types · cascade chains · rollBlackSwan() · fragility-gated' },
+  { id:'frontend',         name:'src/app',                 lane:6, x:1100, y:145, w:108, h:30, size:'Next.js 16', role:'React + d3-force · Socket.io client · port 3000 · 20 components in src/components/sim/ · Zustand store' },
+  { id:'database',         name:'Prisma + SQLite',         lane:6, x:1100, y:235, w:166, h:28, size:'9 models', role:'Prisma schema: User · Post · ModelRun · Category · Variable · Edge · Regime · ExtractedEdge · NeuralWeight' },
+  { id:'decrees',          name:'decrees.ts',              lane:6, x:1100, y:325, w:116, h:30, size:'43KB',   role:'38 French NLP patterns · 2-year projection · executeDecree() · verdict engine' },
+  { id:'index',            name:'index.ts',                lane:6, x:1100, y:415, w:96,  h:28, size:'9.4KB',  role:'Socket.io server · port 3003 · 200ms tick · REST endpoints · entry point' },
+  { id:'engine',           name:'engine.ts  ·  SimulationEngine', lane:'center', x:620, y:560, w:680, h:40, size:'43KB', role:'SimulationEngine · orchestrates all layers · the spine of the system · ticks every 200ms' }
+];
+
+const NODE_COLOR = {
+  'causal-extractor':'#06b6d4',
+  'model-loader':'#8b949e',
+  'neural-network':'#f59e0b',
+  'formulas':'#f59e0b',
+  'model':'#f59e0b',
+  'nonlinear':'#a855f7',
+  'paradigm':'#a855f7',
+  'agent-swarm':'#10b981',
+  'black-swan':'#f43f5e',
+  'frontend':'#84cc16',
+  'database':'#8b949e',
+  'decrees':'#eab308',
+  'index':'#84cc16',
+  'engine':'#f59e0b'
+};
+
+// Solid import edges: [importer, imported]
+const IMPORT_EDGES = [
+  ['index','engine'],
+  ['engine','formulas'],
+  ['engine','neural-network'],
+  ['engine','nonlinear'],
+  ['engine','agent-swarm'],
+  ['engine','black-swan'],
+  ['engine','paradigm'],
+  ['engine','decrees'],
+  ['engine','model'],
+  ['engine','causal-extractor'],
+  ['engine','model-loader'],
+  ['formulas','model'],
+  ['neural-network','model'],
+  ['nonlinear','model'],
+  ['agent-swarm','model'],
+  ['black-swan','model'],
+  ['paradigm','model'],
+  ['decrees','model'],
+  ['causal-extractor','model'],
+  ['model-loader','database'],
+  ['causal-extractor','database'],
+  ['frontend','engine']
+];
+
+// Dashed data-flow edges: [from, to]
+const FLOW_EDGES = [
+  ['database','neural-network'],
+  ['neural-network','nonlinear'],
+  ['nonlinear','agent-swarm'],
+  ['agent-swarm','black-swan'],
+  ['black-swan','frontend']
+];
+
+const NODE_MAP = {};
+NODES.forEach(n => NODE_MAP[n.id] = n);
+NODES.forEach(n => { n.imports = []; n.importedBy = []; });
+IMPORT_EDGES.forEach(([f,t]) => {
+  NODE_MAP[f].imports.push(t);
+  NODE_MAP[t].importedBy.push(f);
+});
+
+const LANE_LABELS = [
+  {lane:1, x:100,  label:'01 EXTRACT'},
+  {lane:2, x:300,  label:'02 NEURAL'},
+  {lane:3, x:500,  label:'03 NONLINEAR'},
+  {lane:4, x:700,  label:'04 SWARM'},
+  {lane:5, x:900,  label:'05 BLACKSWAN'},
+  {lane:6, x:1100, label:'06 VIZ'}
+];
+
+const LANE_NAMES = {
+  1:'EXTRACT', 2:'NEURAL', 3:'NONLINEAR', 4:'SWARM', 5:'BLACKSWAN', 6:'VIZ'
+};
+
+// ============================================================
+// SVG RENDER
+// ============================================================
+const svg = document.getElementById('graph');
+const ns = 'http://www.w3.org/2000/svg';
+
+function el(name, attrs){
+  const e = document.createElementNS(ns, name);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+// Defs
+const defs = el('defs', {});
+defs.innerHTML = `
+  <marker id="arr-imp" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+    <path d="M0,0 L0,6 L7,3 z" fill="rgba(245,158,11,0.45)"/>
+  </marker>
+  <marker id="arr-imp-hi" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+    <path d="M0,0 L0,6 L7,3 z" fill="#f59e0b"/>
+  </marker>
+  <marker id="arr-flow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+    <path d="M0,0 L0,6 L7,3 z" fill="rgba(245,158,11,0.35)"/>
+  </marker>
+  <marker id="arr-flow-hi" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+    <path d="M0,0 L0,6 L7,3 z" fill="#f59e0b"/>
+  </marker>
+`;
+svg.appendChild(defs);
+
+// Lane guides (faint vertical dashed lines)
+LANE_LABELS.forEach(l => {
+  svg.appendChild(el('line', {
+    x1:l.x, y1:50, x2:l.x, y2:520,
+    class:'lane-guide'
+  }));
+});
+
+// Lane labels
+LANE_LABELS.forEach(l => {
+  const t = el('text', {x:l.x, y:32, 'text-anchor':'middle', class:'lane-label'});
+  t.textContent = l.label;
+  svg.appendChild(t);
+});
+
+// Edge layer
+const edgeLayer = el('g', {id:'edges'});
+svg.appendChild(edgeLayer);
+// Node layer
+const nodeLayer = el('g', {id:'nodes'});
+svg.appendChild(nodeLayer);
+
+// Border anchor: where the line from n to `toward` exits n's pill rectangle
+function anchor(n, toward){
+  const dx = toward.x - n.x;
+  const dy = toward.y - n.y;
+  const hw = n.w/2 + 3, hh = n.h/2 + 3;
+  if(dx === 0 && dy === 0) return {x:n.x, y:n.y};
+  const sx = dx === 0 ? Infinity : hw / Math.abs(dx);
+  const sy = dy === 0 ? Infinity : hh / Math.abs(dy);
+  const t = Math.min(sx, sy);
+  return { x: n.x + dx * t, y: n.y + dy * t };
+}
+
+function drawEdges(){
+  edgeLayer.innerHTML = '';
+  IMPORT_EDGES.forEach(([fId, tId]) => {
+    const f = NODE_MAP[fId], t = NODE_MAP[tId];
+    const a = anchor(f, t);
+    const b = anchor(t, f);
+    const p = el('path', {
+      d:`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} L ${b.x.toFixed(1)} ${b.y.toFixed(1)}`,
+      fill:'none',
+      stroke:'var(--edge-import)',
+      'stroke-width':'1',
+      'marker-end':'url(#arr-imp)',
+      class:'edge import-edge',
+      'data-from':fId,
+      'data-to':tId
+    });
+    edgeLayer.appendChild(p);
+  });
+  FLOW_EDGES.forEach(([fId, tId]) => {
+    const f = NODE_MAP[fId], t = NODE_MAP[tId];
+    const a = anchor(f, t);
+    const b = anchor(t, f);
+    const p = el('path', {
+      d:`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} L ${b.x.toFixed(1)} ${b.y.toFixed(1)}`,
+      fill:'none',
+      stroke:'var(--edge-flow)',
+      'stroke-width':'1',
+      'stroke-dasharray':'4,3',
+      'marker-end':'url(#arr-flow)',
+      class:'edge flow-edge',
+      'data-from':fId,
+      'data-to':tId
+    });
+    edgeLayer.appendChild(p);
+  });
+}
+
+function drawNodes(){
+  nodeLayer.innerHTML = '';
+  NODES.forEach(n => {
+    const g = el('g', {
+      class:'node' + (n.id === 'engine' ? ' engine' : ''),
+      'data-id':n.id,
+      'data-lane':n.lane,
+      transform:`translate(${n.x},${n.y})`
+    });
+    g.appendChild(el('rect', {
+      x:-n.w/2, y:-n.h/2, width:n.w, height:n.h, rx:14
+    }));
+    // Category dot
+    const dotX = n.id === 'engine' ? -n.w/2 + 14 : -n.w/2 + 12;
+    g.appendChild(el('circle', {
+      cx:dotX, cy:0, r:3.5, fill:NODE_COLOR[n.id]
+    }));
+    // Text
+    const text = el('text', {});
+    if(n.id === 'engine'){
+      text.setAttribute('x', 0);
+      text.setAttribute('text-anchor', 'middle');
+    } else {
+      text.setAttribute('x', -n.w/2 + 22);
+      text.setAttribute('text-anchor', 'start');
+    }
+    text.setAttribute('y', 4);
+    text.textContent = n.name;
+    g.appendChild(text);
+
+    g.addEventListener('mouseenter', () => onHover(n.id));
+    g.addEventListener('mouseleave', () => onHoverEnd());
+    g.addEventListener('click', (e) => { e.stopPropagation(); onSelect(n.id); });
+
+    nodeLayer.appendChild(g);
+  });
+}
+
+drawEdges();
+drawNodes();
+
+// ============================================================
+// INTERACTIVITY
+// ============================================================
+let selectedNode = null;
+let traceMode = null;
+let activeLane = null;
+let searchTerm = '';
+let hoveredNode = null;
+
+function neighborsOf(id){
+  const s = new Set([id]);
+  [...IMPORT_EDGES, ...FLOW_EDGES].forEach(([f,t]) => {
+    if(f === id) s.add(t);
+    if(t === id) s.add(f);
+  });
+  return s;
+}
+
+function edgesTouching(id){
+  const s = new Set();
+  [...IMPORT_EDGES, ...FLOW_EDGES].forEach(([f,t]) => {
+    if(f === id || t === id) s.add(f + '|' + t);
+  });
+  return s;
+}
+
+function transitiveReach(startId, direction){
+  const visited = new Set([startId]);
+  const queue = [startId];
+  while(queue.length){
+    const cur = queue.shift();
+    const next = direction === 'upstream' ? NODE_MAP[cur].importedBy : NODE_MAP[cur].imports;
+    next.forEach(id => {
+      if(!visited.has(id)){
+        visited.add(id);
+        queue.push(id);
+      }
+    });
+  }
+  return visited;
+}
+
+function setEdgeStyle(p, highlighted, isFlow){
+  p.classList.remove('dimmed','highlighted');
+  if(highlighted){
+    p.classList.add('highlighted');
+    p.setAttribute('stroke', '#f59e0b');
+    p.setAttribute('marker-end', isFlow ? 'url(#arr-flow-hi)' : 'url(#arr-imp-hi)');
+  } else {
+    p.setAttribute('stroke', isFlow ? 'var(--edge-flow)' : 'var(--edge-import)');
+    p.setAttribute('marker-end', isFlow ? 'url(#arr-flow)' : 'url(#arr-imp)');
+  }
+}
+
+function applyBaseState(){
+  // Reset all nodes and edges to their default (non-hover, non-trace) state,
+  // then apply search + lane filter.
+  const allNodes = nodeLayer.querySelectorAll('.node');
+  const allEdges = edgeLayer.querySelectorAll('.edge');
+
+  // Determine visible set based on search + lane
+  let visibleNodes = new Set(NODES.map(n => n.id));
+
+  if(searchTerm){
+    const term = searchTerm.toLowerCase();
+    const matching = new Set(NODES.filter(n =>
+      n.name.toLowerCase().includes(term) ||
+      n.id.toLowerCase().includes(term) ||
+      n.role.toLowerCase().includes(term)
+    ).map(n => n.id));
+    visibleNodes = new Set([...visibleNodes].filter(id => matching.has(id)));
+  }
+
+  if(activeLane !== null){
+    // Engine (center) is always visible — it's the orchestrator
+    const keep = new Set(NODES.filter(n => n.lane === activeLane || n.lane === 'center').map(n => n.id));
+    visibleNodes = new Set([...visibleNodes].filter(id => keep.has(id)));
+  }
+
+  allNodes.forEach(g => {
+    const id = g.getAttribute('data-id');
+    g.classList.remove('dimmed','highlighted','trace-highlight','hovered');
+    if(visibleNodes.has(id)){
+      // visible
+    } else {
+      g.classList.add('dimmed');
+    }
+  });
+
+  allEdges.forEach(p => {
+    const f = p.getAttribute('data-from');
+    const t = p.getAttribute('data-to');
+    const isFlow = p.classList.contains('flow-edge');
+    if(visibleNodes.has(f) && visibleNodes.has(t)){
+      setEdgeStyle(p, false, isFlow);
+    } else {
+      p.classList.remove('highlighted');
+      p.classList.add('dimmed');
+      p.setAttribute('stroke', isFlow ? 'var(--edge-flow)' : 'var(--edge-import)');
+      p.setAttribute('marker-end', isFlow ? 'url(#arr-flow)' : 'url(#arr-imp)');
+    }
+  });
+}
+
+function applyTrace(){
+  if(!traceMode || !selectedNode){
+    document.getElementById('traceInfo').textContent = '';
+    return;
+  }
+  const reach = transitiveReach(selectedNode, traceMode);
+  const highlightEdges = new Set();
+  [...IMPORT_EDGES, ...FLOW_EDGES].forEach(([f,t]) => {
+    if(reach.has(f) && reach.has(t)) highlightEdges.add(f + '|' + t);
+  });
+
+  nodeLayer.querySelectorAll('.node').forEach(g => {
+    const id = g.getAttribute('data-id');
+    g.classList.remove('dimmed','highlighted','trace-highlight','hovered');
+    if(reach.has(id)){
+      if(id === selectedNode){
+        g.classList.add('trace-highlight');
+      } else {
+        g.classList.add('highlighted');
+      }
+    } else {
+      g.classList.add('dimmed');
+    }
+  });
+
+  edgeLayer.querySelectorAll('.edge').forEach(p => {
+    const f = p.getAttribute('data-from');
+    const t = p.getAttribute('data-to');
+    const isFlow = p.classList.contains('flow-edge');
+    const key = f + '|' + t;
+    if(highlightEdges.has(key)){
+      setEdgeStyle(p, true, isFlow);
+    } else {
+      p.classList.remove('highlighted');
+      p.classList.add('dimmed');
+    }
+  });
+
+  const count = reach.size - 1;
+  document.getElementById('traceInfo').textContent =
+    count === 0
+      ? (traceMode === 'upstream' ? 'no upstream dependents · this is a root' : 'no downstream imports · this is a leaf')
+      : `${count} node${count===1?'':'s'} ${traceMode === 'upstream' ? 'upstream · depends on this' : 'downstream · imported by this'}`;
+}
+
+function onHover(id){
+  hoveredNode = id;
+  if(traceMode) return; // trace takes priority
+  const neighbors = neighborsOf(id);
+  const connEdges = edgesTouching(id);
+
+  nodeLayer.querySelectorAll('.node').forEach(g => {
+    const nid = g.getAttribute('data-id');
+    g.classList.remove('hovered','dimmed','highlighted');
+    if(nid === id){
+      g.classList.add('hovered');
+    } else if(!neighbors.has(nid)){
+      g.classList.add('dimmed');
+    }
+  });
+
+  edgeLayer.querySelectorAll('.edge').forEach(p => {
+    const f = p.getAttribute('data-from');
+    const t = p.getAttribute('data-to');
+    const isFlow = p.classList.contains('flow-edge');
+    const key = f + '|' + t;
+    if(connEdges.has(key)){
+      setEdgeStyle(p, true, isFlow);
+    } else {
+      p.classList.remove('highlighted');
+      p.classList.add('dimmed');
+    }
+  });
+}
+
+function onHoverEnd(){
+  hoveredNode = null;
+  if(traceMode) return;
+  if(selectedNode){
+    // keep selection visible but restore non-hover state
+    applyBaseState();
+  } else {
+    applyBaseState();
+  }
+}
+
+function onSelect(id){
+  selectedNode = id;
+  traceMode = null;
+  showPanel(id);
+  document.getElementById('traceUp').classList.remove('active');
+  document.getElementById('traceDown').classList.remove('active');
+  document.getElementById('traceClear').style.display = 'none';
+  document.getElementById('traceInfo').textContent = '';
+  applyBaseState();
+}
+
+function showPanel(id){
+  const n = NODE_MAP[id];
+  document.getElementById('panelEmpty').style.display = 'none';
+  document.getElementById('panelContent').style.display = 'block';
+  document.getElementById('panel').classList.remove('collapsed');
+
+  const laneStr = typeof n.lane === 'number'
+    ? `LANE ${String(n.lane).padStart(2,'0')} · ${LANE_NAMES[n.lane]}`
+    : 'CENTER · ORCHESTRATOR';
+  document.getElementById('pLane').textContent = laneStr;
+  document.getElementById('pFilename').textContent = n.name;
+  document.getElementById('pSize').textContent = n.size;
+  document.getElementById('pRole').textContent = n.role;
+
+  // Imports
+  const impEl = document.getElementById('pImports');
+  impEl.innerHTML = '';
+  document.getElementById('pImportsCount').textContent = n.imports.length;
+  if(n.imports.length === 0){
+    impEl.innerHTML = '<div class="list-empty">no imports · leaf module</div>';
+  } else {
+    n.imports.forEach(iid => {
+      const item = document.createElement('div');
+      item.className = 'list-item';
+      item.innerHTML = `<span class="arrow-glyph">→</span><span>${NODE_MAP[iid].name}</span>`;
+      item.addEventListener('click', () => onSelect(iid));
+      impEl.appendChild(item);
+    });
+  }
+
+  // Imported by
+  const ibEl = document.getElementById('pImportedBy');
+  ibEl.innerHTML = '';
+  document.getElementById('pImportedByCount').textContent = n.importedBy.length;
+  if(n.importedBy.length === 0){
+    ibEl.innerHTML = '<div class="list-empty">not imported · root entry</div>';
+  } else {
+    n.importedBy.forEach(iid => {
+      const item = document.createElement('div');
+      item.className = 'list-item';
+      item.innerHTML = `<span class="arrow-glyph">←</span><span>${NODE_MAP[iid].name}</span>`;
+      item.addEventListener('click', () => onSelect(iid));
+      ibEl.appendChild(item);
+    });
+  }
+}
+
+function closePanel(){
+  document.getElementById('panel').classList.add('collapsed');
+  setTimeout(() => {
+    document.getElementById('panelEmpty').style.display = 'block';
+    document.getElementById('panelContent').style.display = 'none';
+  }, 250);
+  selectedNode = null;
+  traceMode = null;
+  document.getElementById('traceUp').classList.remove('active');
+  document.getElementById('traceDown').classList.remove('active');
+  document.getElementById('traceClear').style.display = 'none';
+  document.getElementById('traceInfo').textContent = '';
+  applyBaseState();
+}
+
+// Trace buttons
+document.getElementById('traceUp').addEventListener('click', () => {
+  if(!selectedNode) return;
+  traceMode = traceMode === 'upstream' ? null : 'upstream';
+  document.getElementById('traceUp').classList.toggle('active', traceMode === 'upstream');
+  document.getElementById('traceDown').classList.remove('active');
+  document.getElementById('traceClear').style.display = traceMode ? 'block' : 'none';
+  if(traceMode) applyTrace(); else applyBaseState();
+});
+
+document.getElementById('traceDown').addEventListener('click', () => {
+  if(!selectedNode) return;
+  traceMode = traceMode === 'downstream' ? null : 'downstream';
+  document.getElementById('traceDown').classList.toggle('active', traceMode === 'downstream');
+  document.getElementById('traceUp').classList.remove('active');
+  document.getElementById('traceClear').style.display = traceMode ? 'block' : 'none';
+  if(traceMode) applyTrace(); else applyBaseState();
+});
+
+document.getElementById('traceClear').addEventListener('click', () => {
+  traceMode = null;
+  document.getElementById('traceUp').classList.remove('active');
+  document.getElementById('traceDown').classList.remove('active');
+  document.getElementById('traceClear').style.display = 'none';
+  document.getElementById('traceInfo').textContent = '';
+  applyBaseState();
+});
+
+document.getElementById('panelClose').addEventListener('click', closePanel);
+
+// Layer filter chips (single-select)
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const lane = parseInt(chip.getAttribute('data-lane'));
+    if(activeLane === lane){
+      activeLane = null;
+      chip.classList.remove('active');
+    } else {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      activeLane = lane;
+      chip.classList.add('active');
+    }
+    if(traceMode) applyTrace(); else applyBaseState();
+  });
+});
+
+// Search
+document.getElementById('search').addEventListener('input', (e) => {
+  searchTerm = e.target.value.trim();
+  if(traceMode) applyTrace(); else applyBaseState();
+});
+
+// Keyboard: Escape closes panel / clears trace
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    if(traceMode){
+      traceMode = null;
+      document.getElementById('traceUp').classList.remove('active');
+      document.getElementById('traceDown').classList.remove('active');
+      document.getElementById('traceClear').style.display = 'none';
+      document.getElementById('traceInfo').textContent = '';
+      applyBaseState();
+    } else if(selectedNode){
+      closePanel();
+    }
+  }
+});
+
+// ============================================================
+// THEME (matches gallery.html pattern)
+// ============================================================
+const STORAGE_KEY = 'prism-arch-theme';
+const root = document.documentElement;
+const themeToggle = document.getElementById('themeToggle');
+
+function applyTheme(theme){
+  root.setAttribute('data-theme', theme);
+}
+
+const saved = localStorage.getItem(STORAGE_KEY);
+const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+applyTheme(saved || (systemDark ? 'dark' : 'light'));
+
+themeToggle.addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  localStorage.setItem(STORAGE_KEY, next);
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  if(!localStorage.getItem(STORAGE_KEY)){
+    applyTheme(e.matches ? 'dark' : 'light');
+  }
+});
+
+// Initial render
+applyBaseState();
+
+})();
+</script>
+</body>
+</html>

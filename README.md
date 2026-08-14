@@ -202,9 +202,33 @@ bun run dev                                          # port 3000
 
 Next.js 16, TypeScript, Tailwind CSS 4, Socket.io, Bun, Prisma, SQLite, d3-force, Web Audio API. The neural network is a custom MLP implementation in TypeScript — no TensorFlow, no PyTorch. 3,008 weights, SGD with momentum, He initialization, ReLU activations.
 
+## Token economy
+
+A policymaker reading twelve World Bank and IMF reports consumes 1.25 million tokens and forty hours. PRISM compresses the same causal content into twenty extracted edges — 2,184 tokens, traversable in milliseconds. The graph is the corpus, distilled.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/token-economy-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/token-economy-light.png">
+  <img alt="Token economy — 571× compression" src="docs/token-economy-light.png" width="100%">
+</picture>
+
+## Paradigm delta
+
+Switching regime is not a parameter tweak. The causal graph rewrites itself: edges are added, removed, and polarity-inverted. The delta below shows exactly what changes when liberalism becomes a planned economy — interest rates no longer suppress public investment, because the state invests regardless.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/paradigm-delta-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/paradigm-delta-light.png">
+  <img alt="Paradigm delta — before / shift / after" src="docs/paradigm-delta-light.png" width="100%">
+</picture>
+
 ## Visual system
 
-The complete set of thirteen diagrams — dark and light, adaptive to your theme — is collected in a standalone gallery: [docs/gallery.html](./docs/gallery.html). Open it in any browser to scroll through the entire system in one page.
+The complete set of sixteen diagrams — dark and light, adaptive to your theme — is collected in a standalone gallery: [docs/gallery.html](./docs/gallery.html). Open it in any browser to scroll through the entire system in one page.
+
+For the navigable codebase graph — every engine file, every import dependency, clickable and traceable — open the [interactive architecture map](./docs/architecture-interactive.html).
+
+A pinned ubiquitous language defining every PRISM term (lever, indicator, scar, fragility, paradigm, polarity inversion) is in [docs/GLOSSARY.md](./docs/GLOSSARY.md). The engine's observable signals, tick budget, and event contracts are in [docs/TELEMETRY.md](./docs/TELEMETRY.md).
 
 The manifesto below renders the project's founding words — "des liens de liens de liens de liens de liens" — as the recursive causal chain it always was.
 

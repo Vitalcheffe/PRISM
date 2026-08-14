@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:760px;background:#ffffff;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif}
+.wrap{width:100%;height:100%;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.03) 1px,transparent 1px);background-size:32px 32px}
+.grain{position:absolute;inset:0;opacity:0.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.title-block{position:absolute;top:28px;left:50%;transform:translateX(-50%);text-align:center;z-index:2}
+.title-block h2{font-size:13px;color:#737373;letter-spacing:0.25em;text-transform:uppercase;font-weight:500;font-family:'SF Mono',monospace}
+.title-block p{font-size:11px;color:#A3A3A3;margin-top:7px;font-family:'SF Mono',monospace;letter-spacing:0.05em}
+.col-label{position:absolute;top:88px;font-size:14px;font-family:'SF Mono',monospace;letter-spacing:0.15em;z-index:2;text-align:center;width:480px}
+.col-label.before{left:120px;color:#A3A3A3}
+.col-label.delta{left:720px;color:#f59e0b}
+.col-label.after{left:1320px;color:#f59e0b}
+.svg-wrap{position:absolute;inset:0;z-index:1}
+.meta{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;color:#A3A3A3;letter-spacing:0.2em;font-family:'SF Mono',monospace;z-index:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="dots"></div>
+<div class="grain"></div>
+
+<div class="title-block">
+<h2>Paradigm Delta — Before / Shift / After</h2>
+<p>switching regime rewrites the causal graph · edges added, removed, polarity inverted</p>
+</div>
+
+<div class="col-label before">LIBERALISM</div>
+<div class="col-label delta">Δ SHIFT</div>
+<div class="col-label after">PLANNED</div>
+
+<div class="svg-wrap">
+<svg width="1920" height="760" viewBox="0 0 1920 760">
+  <defs>
+    <marker id="ap" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="rgba(16,185,129,0.65)"/></marker>
+    <marker id="an" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="rgba(244,63,94,0.65)"/></marker>
+    <marker id="arem" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="rgba(244,63,94,0.7)"/></marker>
+  </defs>
+
+  <!-- Column dividers -->
+  <line x1="660" y1="110" x2="660" y2="520" stroke="#1A1A1A" stroke-width="1" opacity="0.08"/>
+  <line x1="1260" y1="110" x2="1260" y2="520" stroke="#1A1A1A" stroke-width="1" opacity="0.08"/>
+
+  <!-- BEFORE graph -->
+  <g id="before" transform="translate(120, 110)"></g>
+  <!-- DELTA graph -->
+  <g id="delta" transform="translate(720, 110)"></g>
+  <!-- AFTER graph -->
+  <g id="after" transform="translate(1320, 110)"></g>
+
+  <!-- Delta legend -->
+  <g transform="translate(960, 500)" font-family="SF Mono" font-size="9" fill="#A3A3A3" letter-spacing="2">
+    <text x="-90" y="0" text-anchor="end">─ added</text>
+    <text x="0" y="0" text-anchor="middle">┄ removed</text>
+    <text x="90" y="0" text-anchor="start">→ polarity flip</text>
+  </g>
+
+  <!-- Polarity-flip lines -->
+  <g id="flips" font-family="SF Mono" font-size="11"></g>
+</svg>
+</div>
+
+<div class="meta">PRISM / DELTA / LIBERAL → PLANNED · 2 FLIPPED · 1 AMPLIFIED · 3 REMOVED</div>
+</div>
+
+<script>
+(function(){
+  const NODES = [
+    {id:'interest_rate',      x:60,  y:90,  w:70},
+    {id:'inflation',          x:240, y:50,  w:49},
+    {id:'gdp_growth',         x:420, y:90,  w:54},
+    {id:'tax_rate',           x:80,  y:200, w:43},
+    {id:'public_investment',  x:240, y:200, w:102},
+    {id:'unemployment',       x:420, y:200, w:65},
+    {id:'subsidies',          x:140, y:340, w:49},
+    {id:'informal_share',     x:340, y:340, w:76}
+  ];
+  const NODE_MAP = {};
+  NODES.forEach(n => NODE_MAP[n.id] = n);
+
+  const BEFORE = [
+    {f:'interest_rate',     t:'public_investment',  c:-0.6, change:'flip'},
+    {f:'subsidies',         t:'gdp_growth',          c:+0.4, change:'flip'},
+    {f:'tax_rate',          t:'informal_share',      c:+0.5, change:'amp'},
+    {f:'tax_rate',          t:'gdp_growth',          c:-0.2, change:'rem'},
+    {f:'inflation',         t:'unemployment',        c:-0.3, change:'rem'},
+    {f:'gdp_growth',        t:'unemployment',        c:-0.5, change:'rem'},
+    {f:'interest_rate',     t:'inflation',           c:+0.4, change:'same'},
+    {f:'public_investment', t:'gdp_growth',          c:+0.7, change:'same'}
+  ];
+  const AFTER = [
+    {f:'interest_rate',     t:'public_investment',  c:+0.1},
+    {f:'subsidies',         t:'gdp_growth',          c:-0.2},
+    {f:'tax_rate',          t:'informal_share',      c:+0.8},
+    {f:'interest_rate',     t:'inflation',           c:+0.4},
+    {f:'public_investment', t:'gdp_growth',          c:+0.7}
+  ];
+
+  function edgeGeom(fId, tId){
+    const src = NODE_MAP[fId], tgt = NODE_MAP[tId];
+    const dx = tgt.x - src.x, dy = tgt.y - src.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const ux = dx/len, uy = dy/len;
+    const perpX = -uy, perpY = ux;
+    const srcOff = src.w/2 + 8;
+    const tgtOff = tgt.w/2 + 8;
+    const sx = src.x + ux*srcOff, sy = src.y + uy*srcOff;
+    const ex = tgt.x - ux*tgtOff, ey = tgt.y - uy*tgtOff;
+    const mx = (sx+ex)/2, my = (sy+ey)/2;
+    const cpx = mx + perpX*18, cpy = my + perpY*18;
+    return {sx, sy, ex, ey, mx, my, cpx, cpy, perpX, perpY, ux, uy};
+  }
+  function coefText(c){ return (c > 0 ? '+' : '') + c.toFixed(1); }
+  function coefColor(c){ return c > 0 ? '#10b981' : '#f43f5e'; }
+  function markerFor(c){ return c > 0 ? 'url(#ap)' : 'url(#an)'; }
+
+  function drawNodes(g, opacity){
+    let s = '';
+    for(const n of NODES){
+      s += '<circle cx="' + (n.x - n.w/2 - 6).toFixed(1) + '" cy="' + n.y + '" r="3" fill="#f59e0b" opacity="' + opacity + '"/>';
+      s += '<text x="' + n.x + '" y="' + (n.y+4) + '" fill="#1A1A1A" font-family="SF Mono" font-size="10" text-anchor="middle" opacity="' + opacity + '">' + n.id + '</text>';
+    }
+    g.innerHTML += s;
+  }
+
+  // BEFORE
+  const beforeG = document.getElementById('before');
+  let bs = '';
+  for(const e of BEFORE){
+    const g = edgeGeom(e.f, e.t);
+    const color = coefColor(e.c);
+    const marker = markerFor(e.c);
+    const op = 0.32 + Math.abs(e.c) * 0.12;
+    const w = 0.7 + Math.abs(e.c) * 1.4;
+    bs += '<path d="M ' + g.sx.toFixed(1) + ' ' + g.sy.toFixed(1) + ' Q ' + g.cpx.toFixed(1) + ' ' + g.cpy.toFixed(1) + ' ' + g.ex.toFixed(1) + ' ' + g.ey.toFixed(1) + '" fill="none" stroke="' + color + '" stroke-width="' + w.toFixed(2) + '" opacity="' + op.toFixed(2) + '" marker-end="' + marker + '"/>';
+    bs += '<text x="' + g.cpx.toFixed(1) + '" y="' + (g.cpy-4).toFixed(1) + '" fill="' + color + '" font-family="SF Mono" font-size="9" text-anchor="middle" opacity="0.9">' + coefText(e.c) + '</text>';
+  }
+  beforeG.innerHTML = bs;
+  drawNodes(beforeG, 1);
+
+  // AFTER
+  const afterG = document.getElementById('after');
+  let as = '';
+  for(const e of AFTER){
+    const g = edgeGeom(e.f, e.t);
+    const color = coefColor(e.c);
+    const marker = markerFor(e.c);
+    const op = 0.35 + Math.abs(e.c) * 0.12;
+    const w = 0.8 + Math.abs(e.c) * 1.4;
+    as += '<path d="M ' + g.sx.toFixed(1) + ' ' + g.sy.toFixed(1) + ' Q ' + g.cpx.toFixed(1) + ' ' + g.cpy.toFixed(1) + ' ' + g.ex.toFixed(1) + ' ' + g.ey.toFixed(1) + '" fill="none" stroke="' + color + '" stroke-width="' + w.toFixed(2) + '" opacity="' + op.toFixed(2) + '" marker-end="' + marker + '"/>';
+    as += '<text x="' + g.cpx.toFixed(1) + '" y="' + (g.cpy-4).toFixed(1) + '" fill="' + color + '" font-family="SF Mono" font-size="9" text-anchor="middle" opacity="0.95">' + coefText(e.c) + '</text>';
+  }
+  afterG.innerHTML = as;
+  drawNodes(afterG, 1);
+
+  // DELTA
+  const deltaG = document.getElementById('delta');
+  let ds = '';
+  // Unchanged edges (dim grey at 18%)
+  for(const e of BEFORE){
+    if(e.change !== 'same') continue;
+    const g = edgeGeom(e.f, e.t);
+    ds += '<path d="M ' + g.sx.toFixed(1) + ' ' + g.sy.toFixed(1) + ' Q ' + g.cpx.toFixed(1) + ' ' + g.cpy.toFixed(1) + ' ' + g.ex.toFixed(1) + ' ' + g.ey.toFixed(1) + '" fill="none" stroke="#A3A3A3" stroke-width="0.9" opacity="0.22" marker-end="url(#an)"/>';
+    ds += '<text x="' + g.cpx.toFixed(1) + '" y="' + (g.cpy-3).toFixed(1) + '" fill="#A3A3A3" font-family="SF Mono" font-size="8" text-anchor="middle" opacity="0.3">' + coefText(e.c) + '</text>';
+  }
+  // Removed edges: dashed crimson with "−"
+  for(const e of BEFORE){
+    if(e.change !== 'rem') continue;
+    const g = edgeGeom(e.f, e.t);
+    ds += '<path d="M ' + g.sx.toFixed(1) + ' ' + g.sy.toFixed(1) + ' Q ' + g.cpx.toFixed(1) + ' ' + g.cpy.toFixed(1) + ' ' + g.ex.toFixed(1) + ' ' + g.ey.toFixed(1) + '" fill="none" stroke="#f43f5e" stroke-width="1.2" opacity="0.7" stroke-dasharray="4,3" marker-end="url(#arem)"/>';
+    ds += '<text x="' + g.cpx.toFixed(1) + '" y="' + (g.cpy-4).toFixed(1) + '" fill="#f43f5e" font-family="SF Mono" font-size="10" text-anchor="middle" opacity="0.9">−</text>';
+  }
+  // Changed edges (flipped / amplified): two parallel curves
+  for(const e of BEFORE){
+    if(e.change !== 'flip' && e.change !== 'amp') continue;
+    const g = edgeGeom(e.f, e.t);
+    const afterEdge = AFTER.find(a => a.f === e.f && a.t === e.t);
+    const oldC = e.c, newC = afterEdge.c;
+    const oldColor = coefColor(oldC), newColor = coefColor(newC);
+    const offset = 4.5;
+    const oldSx = g.sx - g.perpX*offset, oldSy = g.sy - g.perpY*offset;
+    const oldEx = g.ex - g.perpX*offset, oldEy = g.ey - g.perpY*offset;
+    const oldCpx = g.cpx - g.perpX*offset, oldCpy = g.cpy - g.perpY*offset;
+    const newSx = g.sx + g.perpX*offset, newSy = g.sy + g.perpY*offset;
+    const newEx = g.ex + g.perpX*offset, newEy = g.ey + g.perpY*offset;
+    const newCpx = g.cpx + g.perpX*offset, newCpy = g.cpy + g.perpY*offset;
+
+    ds += '<path d="M ' + oldSx.toFixed(1) + ' ' + oldSy.toFixed(1) + ' Q ' + oldCpx.toFixed(1) + ' ' + oldCpy.toFixed(1) + ' ' + oldEx.toFixed(1) + ' ' + oldEy.toFixed(1) + '" fill="none" stroke="' + oldColor + '" stroke-width="1" opacity="0.55" stroke-dasharray="3,3"/>';
+    ds += '<path d="M ' + newSx.toFixed(1) + ' ' + newSy.toFixed(1) + ' Q ' + newCpx.toFixed(1) + ' ' + newCpy.toFixed(1) + ' ' + newEx.toFixed(1) + ' ' + newEy.toFixed(1) + '" fill="none" stroke="' + newColor + '" stroke-width="1.4" opacity="1" marker-end="' + (newC > 0 ? 'url(#ap)' : 'url(#an)') + '"/>';
+    const labelX = g.cpx, labelY = g.cpy - 8;
+    ds += '<text x="' + labelX.toFixed(1) + '" y="' + labelY.toFixed(1) + '" fill="#1A1A1A" font-family="SF Mono" font-size="9" text-anchor="middle">' + coefText(oldC) + ' → ' + coefText(newC) + '</text>';
+  }
+  deltaG.innerHTML = ds;
+  drawNodes(deltaG, 1);
+
+  // Polarity-flip lines
+  const flips = [
+    {edge:'interest_rate → public_investment', oldC:-0.6, newC:+0.1, label:'FLIPPED'},
+    {edge:'subsidies → gdp_growth',             oldC:+0.4, newC:-0.2, label:'FLIPPED'},
+    {edge:'tax_rate → informal_share',          oldC:+0.5, newC:+0.8, label:'AMPLIFIED'}
+  ];
+  const flipsG = document.getElementById('flips');
+  let fs = '';
+  flips.forEach((f, i) => {
+    const y = 580 + i * 28;
+    fs += '<text x="820" y="' + y + '" fill="#737373" font-size="11" text-anchor="end">' + f.edge + '</text>';
+    fs += '<text x="880" y="' + y + '" fill="#A3A3A3" font-size="11" text-anchor="end">' + coefText(f.oldC) + '</text>';
+    fs += '<text x="902" y="' + y + '" fill="#f59e0b" font-size="11" text-anchor="middle">⟶</text>';
+    fs += '<text x="924" y="' + y + '" fill="#1A1A1A" font-size="11" text-anchor="start">' + coefText(f.newC) + '</text>';
+    fs += '<text x="985" y="' + y + '" fill="#A3A3A3" font-size="10" text-anchor="start" letter-spacing="1">(' + f.label + ')</text>';
+  });
+  flipsG.innerHTML = fs;
+})();
+</script>
+</body>
+</html>
