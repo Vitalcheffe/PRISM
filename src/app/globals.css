@@ -1,0 +1,511 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   SYSTÈME DYNAMIQUE — Thème papier / minimaliste
+   Blanc cassé, traits fins, encre. Pas de fluo, pas de glow.
+   Références : Tufte, Vignelli, Stripe, Linear.
+
+   Toutes les variables de palette sont déclarées dans @theme (pas :root)
+   pour que Tailwind v4 les émette effectivement dans le CSS compilé.
+   Les variables dans :root hors @theme sont tree-shakées par Tailwind v4.
+   ============================================================ */
+
+@theme {
+  --radius: 0.25rem; /* rayon réduit — aspect technique */
+
+  /* Palette papier */
+  --paper: #FAFAF7;        /* fond chaud, légèrement crème */
+  --surface: #FFFFFF;      /* cartes */
+  --ink: #1A1A1A;          /* encre — texte principal */
+  --ink-soft: #525252;     /* gris foncé — texte secondaire */
+  --ink-mute: #737373;     /* gris — légendes */
+  --ink-faint: #A3A3A3;    /* gris clair — métadonnées */
+  --rule: #E5E5E5;         /* trait fin — bordures */
+  --rule-soft: #F0F0F0;    /* séparateur interne */
+  --rule-strong: #D4D4D4;  /* trait moyen — axes */
+
+  /* États sémantiques (désaturés) */
+  --state-healthy: #1A1A1A;  /* encre — le défaut */
+  --state-tension: #92400E;  /* ocre brun */
+  --state-crisis: #7F1D1D;   /* bordeaux */
+
+  /* Variables shadcn (mappées sur la palette papier) */
+  --background: #FAFAF7;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #1A1A1A;
+  --primary-foreground: #FAFAF7;
+  --secondary: #F5F5F2;
+  --secondary-foreground: #1A1A1A;
+  --muted: #F5F5F2;
+  --muted-foreground: #737373;
+  --accent: #F5F5F2;
+  --accent-foreground: #1A1A1A;
+  --destructive: #7F1D1D;
+  --border: #E5E5E5;
+  --input: #E5E5E5;
+  --ring: #1A1A1A;
+  --chart-1: #1A1A1A;
+  --chart-2: #525252;
+  --chart-3: #92400E;
+  --chart-4: #7F1D1D;
+  --chart-5: #A3A3A3;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #1A1A1A;
+  --sidebar-primary-foreground: #FAFAF7;
+  --sidebar-accent: #F5F5F2;
+  --sidebar-accent-foreground: #1A1A1A;
+  --sidebar-border: #E5E5E5;
+  --sidebar-ring: #1A1A1A;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv01", "cv03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    outline-color: var(--ink);
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* --- Scrollbar minimaliste --- */
+.sd-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+}
+.sd-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.sd-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sd-scroll::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border-radius: 0;
+}
+.sd-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-faint);
+}
+
+/* --- Traits fins --- */
+.sd-rule {
+  border-color: var(--rule);
+}
+.sd-rule-soft {
+  border-color: var(--rule-soft);
+}
+.sd-rule-strong {
+  border-color: var(--rule-strong);
+}
+
+/* --- États sémantiques (utilitaires) --- */
+.sd-healthy { color: var(--state-healthy); }
+.sd-tension { color: var(--state-tension); }
+.sd-crisis { color: var(--state-crisis); }
+.sd-bg-healthy { background-color: var(--state-healthy); }
+.sd-bg-tension { background-color: var(--state-tension); }
+.sd-bg-crisis { background-color: var(--state-crisis); }
+
+/* --- Slider minimaliste (encre, pas de fluo) --- */
+.sd-slider[data-slot="slider"] [data-slot="slider-track"] {
+  background-color: var(--rule);
+  height: 1px;
+}
+.sd-slider[data-slot="slider"] [data-slot="slider-range"] {
+  background-color: var(--ink);
+  height: 1px;
+}
+.sd-slider[data-slot="slider"] [data-slot="slider-thumb"] {
+  border-color: var(--ink);
+  background-color: var(--surface);
+  border-width: 1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* --- Transitions de valeur --- */
+.sd-value-trans {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sd-value-slow {
+  transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Animations sobres (uniquement fonctionnelles) --- */
+@keyframes sd-pulse-ink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.sd-pulse-ink {
+  animation: sd-pulse-ink 1.6s ease-in-out infinite;
+}
+
+@keyframes sd-draw {
+  from { stroke-dashoffset: var(--sd-dash, 1000); }
+  to { stroke-dashoffset: 0; }
+}
+.sd-draw {
+  stroke-dasharray: var(--sd-dash, 1000);
+  animation: sd-draw 800ms ease-out forwards;
+}
+
+@keyframes sd-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.sd-fade-in {
+  animation: sd-fade-in 300ms ease-out forwards;
+}
+
+/* --- Focus visible (encre, pas de bleu) --- */
+*:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* --- Sélection de texte --- */
+::selection {
+  background-color: var(--ink);
+  color: var(--paper);
+}
+
+/* --- Désactiver les ombres par défaut de shadcn --- */
+[data-slot="card"] {
+  box-shadow: none;
+}
+
+/* --- Impression : si on imprime, on garde le papier --- */
+@media print {
+  body {
+    background: white;
+  }
+}
+
+/* ============================================================
+   SYSTÈME DYNAMIQUE V3 — Éléments spécifiques au panneau nucléaire
+   Cubes (carrés 2D vus de dessus), mini-sliders, ripples.
+   ============================================================ */
+
+/* --- Cube (carré du panneau de contrôle) --- */
+.sd-cube {
+  position: relative;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+}
+.sd-cube:hover {
+  transform: scale(1.12);
+  z-index: 2;
+}
+.sd-cube:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 1px;
+}
+.sd-cube-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--ink);
+  transition: height 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sd-cube-fill.cold {
+  background-color: var(--ink-faint);
+  opacity: 0.5;
+}
+.sd-cube-fill.hot {
+  background-color: var(--state-tension);
+}
+.sd-cube-fill.crisis {
+  background-color: var(--state-crisis);
+}
+.sd-cube.is-selected {
+  outline: 1px solid var(--ink);
+  outline-offset: 1px;
+}
+.sd-cube.is-rippling {
+  animation: sd-cube-flash 200ms ease-out;
+}
+@keyframes sd-cube-flash {
+  0% { opacity: 1; }
+  40% { opacity: 0.35; }
+  100% { opacity: 1; }
+}
+
+/* --- Mini-slider (sous chaque cube en zoom mode) --- */
+.sd-mini-slider[data-slot="slider"] {
+  height: 14px;
+}
+.sd-mini-slider[data-slot="slider"] [data-slot="slider-track"] {
+  background-color: var(--rule);
+  height: 1px;
+}
+.sd-mini-slider[data-slot="slider"] [data-slot="slider-range"] {
+  background-color: var(--ink);
+  height: 1px;
+}
+.sd-mini-slider[data-slot="slider"] [data-slot="slider-thumb"] {
+  border-color: var(--ink);
+  background-color: var(--surface);
+  border-width: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 0;
+}
+
+/* --- Safe-zone overlay (segment plus épais) --- */
+.sd-safe-zone {
+  position: absolute;
+  height: 3px;
+  background-color: var(--ink-faint);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* --- Tick badge pour les alertes --- */
+.sd-tick {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+}
+
+/* --- Dashed line pour les références sparkline --- */
+.sd-dashed-ref {
+  stroke-dasharray: 2 3;
+  opacity: 0.5;
+}
+
+/* --- Tooltip de cube (style papier technique) --- */
+.sd-cube-tooltip {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 6px;
+  white-space: nowrap;
+}
+
+/* --- Boutons texte (régimes, vues) --- */
+.sd-text-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: color 150ms ease, border-color 150ms ease;
+  letter-spacing: 0.02em;
+}
+.sd-text-btn:hover {
+  color: var(--ink-soft);
+  border-bottom-color: var(--rule);
+}
+.sd-text-btn.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+/* --- Quick step buttons (±5%, ±10%) --- */
+.sd-step-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 0.25rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.sd-step-btn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.sd-step-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Ticker horizontal (footer) --- */
+.sd-ticker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.sd-ticker::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- Cellule de tableau méthodologie --- */
+.sd-table-row {
+  border-bottom: 1px solid var(--rule-soft);
+  transition: background-color 120ms ease;
+}
+.sd-table-row:hover {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+/* --- Chip d'exemple de décret --- */
+.sd-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 0.25rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.sd-chip:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* --- Sparkline draw-in animation --- */
+.sd-sparkline-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: sd-spark-draw 800ms ease-out forwards;
+}
+@keyframes sd-spark-draw {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* --- Genesis modal pulse --- */
+@keyframes sd-gen-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.sd-gen-bar {
+  animation: sd-gen-bar 1.4s ease-in-out infinite;
+}
+
+/* ============================================================
+   SYSTÈME DYNAMIQUE V3 — GLOBE (vue radiale)
+   Cubes radiaux, spokes, ripples, label radial.
+   ============================================================ */
+
+/* --- Cube radial (dans l'anneau du globe) --- */
+.sd-cube-radial {
+  /* Les transitions sur width/height/x/y sont gérées en inline (SVG attribute
+     transitions). Ici on gère juste le hover outline. */
+}
+.sd-cube-radial-label {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  fill: var(--ink-mute);
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* --- Ripple sur un cube (flash d'opacité 200ms) --- */
+@keyframes sd-cube-ripple-flash {
+  0% { opacity: 1; }
+  40% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+.sd-cube-ripple {
+  animation: sd-cube-ripple-flash 200ms ease-out;
+}
+
+/* --- Ligne d'ripple (entre deux cubes, 300ms) --- */
+@keyframes sd-ripple-line {
+  0% { opacity: 0; stroke-width: 2; }
+  60% { opacity: 0.9; }
+  100% { opacity: 0.8; stroke-width: 1; }
+}
+.sd-ripple-line {
+  animation: sd-ripple-line 300ms ease-out forwards;
+}
+
+/* --- SVG du globe : curseur grab quand on zoom --- */
+.sd-globe-svg {
+  display: block;
+  cursor: default;
+}

@@ -1,0 +1,176 @@
+// Prisma schema — SYSTÈME DYNAMIQUE
+// Le modèle macroéconomique est généré puis persisté. Aucune donnée codée en dur.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --- Anciens modèles (conservés pour compat, inutilisés par la V2) ---
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =================================================================
+//  SYSTÈME DYNAMIQUE — Modèle macroéconomique généré
+// =================================================================
+
+/// Un run de génération complet : toutes les variables + arêtes + catégories + régimes.
+model ModelRun {
+  id            String     @id @default(cuid())
+  createdAt     DateTime   @default(now())
+  country       String     // code ISO 3 lettres, ex. "MAR"
+  countryName   String     // "Maroc"
+  sourceName    String     // "World Bank WDI"
+  variableCount Int
+  edgeCount     Int
+  categoryCount Int
+  regimeCount   Int
+  notes         String?    // métadonnées de génération (LLM model, timestamp, etc.)
+
+  variables     Variable[]
+  edges         Edge[]
+  categories    Category[]
+  regimes       Regime[]
+
+  @@index([country])
+}
+
+/// Catégorie thématique (Économie, Santé, etc.)
+model Category {
+  id          String   @id @default(cuid())
+  modelRunId  String
+  code        String   // "economy", "health", ...
+  name        String   // "Économie"
+  description String
+
+  modelRun    ModelRun @relation(fields: [modelRunId], references: [id], onDelete: Cascade)
+  variables   Variable[]
+
+  @@unique([modelRunId, code])
+  @@index([modelRunId])
+}
+
+/// Une variable macroéconomique, mappée à un indicateur réel de la Banque Mondiale.
+model Variable {
+  id              String   @id @default(cuid())
+  modelRunId      String
+  indicatorCode   String   // ex. "NY.GDP.MKTP.CD" (code WB réel)
+  slug            String   // ex. "gdp" (identifiant court pour le frontend)
+  name            String   // "PIB"
+  categoryCode    String
+  rawValue        Float    // valeur brute réelle (ex. 142000000000)
+  rawUnit         String   // ex. "current US$"
+  rawYear         Int      // ex. 2022
+  normalizedValue Float    // ∈ [0,1] pour le moteur
+  polarity        String   // "high" | "low" | "balanced"
+  weight          Float    // ∈ [0,1] importance dans la stabilité
+  description     String
+  rationale       String   // justification LLM (polarité, poids)
+  sourceName      String   // "Banque Mondiale, WDI 2023"
+  sourceUrl       String
+
+  modelRun        ModelRun @relation(fields: [modelRunId], references: [id], onDelete: Cascade)
+  category        Category @relation(fields: [modelRunId, categoryCode], references: [modelRunId, code], onDelete: Cascade)
+
+  outgoingEdges   Edge[]   @relation("EdgeSource")
+  incomingEdges   Edge[]   @relation("EdgeTarget")
+
+  @@unique([modelRunId, indicatorCode])
+  @@unique([modelRunId, slug])
+  @@index([modelRunId, categoryCode])
+  @@index([modelRunId])
+}
+
+/// Une relation causale entre deux variables, extraite par LLM.
+model Edge {
+  id          String   @id @default(cuid())
+  modelRunId  String
+  sourceId    String   // référence Variable.id
+  targetId    String   // référence Variable.id
+  coefficient Float    // ∈ [-1, 1] signé
+  delayTicks  Int      // retard en ticks (1 tick = 15 jours simulé)
+  confidence  Float    // ∈ [0, 1] confiance LLM
+  rationale   String   // justification courte (mécanisme économique)
+
+  modelRun    ModelRun @relation(fields: [modelRunId], references: [id], onDelete: Cascade)
+  source      Variable @relation("EdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target      Variable @relation("EdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([modelRunId, sourceId, targetId])
+  @@index([modelRunId, sourceId])
+  @@index([modelRunId, targetId])
+}
+
+/// Un régime politique — modifie la topologie du réseau.
+model Regime {
+  id          String   @id @default(cuid())
+  modelRunId  String
+  code        String   // "democracy", "monarchy", ...
+  name        String   // "Démocratie"
+  description String
+  config      String   // JSON sérialisé : { biasShift, weightMask, volatility, inertia }
+
+  modelRun    ModelRun @relation(fields: [modelRunId], references: [id], onDelete: Cascade)
+
+  @@unique([modelRunId, code])
+  @@index([modelRunId])
+}
+
+/// Arête causale extraite par le NLP Causal Extractor (LLM).
+model ExtractedEdge {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  sourceUrl     String
+  sourceTitle   String
+  sourceName    String
+  targetName    String
+  sourceLeverId String?
+  targetLeverId String?
+  coefficient   Float
+  delayMonths   Int
+  delayTicks    Int
+  confidence    Float
+  rationale     String
+  llmModel      String   @default("glm-4.5")
+
+  @@index([sourceLeverId])
+  @@index([targetLeverId])
+  @@index([sourceUrl])
+}
+
+/// Snapshot des poids du réseau neuronal (MLP 3008 transistors).
+/// Permet de sauvegarder et recharger l'apprentissage.
+model NeuralWeight {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  epoch         Int
+  totalSamples  Int
+  lastLoss      Float
+  weightsJson   String   // JSON sérialisé des poids par couche
+  inputMean     String   // JSON
+  inputStd      String   // JSON
+  outputMean    String   // JSON
+  outputStd     String   // JSON
+  architecture  String   @default("47-32-32-15")
+  totalWeights  Int      @default(3008)
+  source        String   @default("live-snapshot")
+}
