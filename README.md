@@ -8,6 +8,15 @@ A non-linear macroeconomic simulator. 47 real policy levers feed a 3,008-weight 
   <img alt="PRISM" src="docs/banner-light.png" width="100%">
 </picture>
 
+## The reactor
+
+47 policy levers, grouped into 8 categories, rising like prisms from a baseline. Each prism's height encodes its current value. When you adjust one, the neural network recomputes all 15 indicators, agents react, and the prisms shift in real time.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/reactor-dark.png">
+  <img alt="The Reactor" src="docs/reactor-dark.png" width="100%">
+</picture>
+
 ## Architecture
 
 <picture>
