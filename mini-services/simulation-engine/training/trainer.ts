@@ -19,7 +19,7 @@ export interface TrainConfig {
 }
 
 export const DEFAULT_CONFIG: TrainConfig = {
-  learningRate: 0.00001,
+  learningRate: 0.0001,
   batchSize: 32,
   l2WeightDecay: 0.001,
   layer0LRMult: 3,
@@ -29,6 +29,11 @@ export const DEFAULT_CONFIG: TrainConfig = {
   lrReducePatience: 10,
   lrReduceFactor: 0.5,
 };
+
+// Alias pour la compatibilité avec les tests qui attendent une fonction
+export function defaultTrainerConfig(overrides: Partial<TrainConfig> = {}): TrainConfig {
+  return { ...DEFAULT_CONFIG, ...overrides };
+}
 
 export interface TrainResult {
   bestValLoss: number;

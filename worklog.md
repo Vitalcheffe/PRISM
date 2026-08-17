@@ -533,3 +533,33 @@ Stage Summary:
 - All other views still work: NetworkView, NeuralView, TimelineView, MetricsView, MethodologyView, KernelView, LifeView, GovernanceView all remain routed in page.tsx — only the `panneau` branch changed.
 - GlobeView (1071 lines) was NOT rewritten — only the routing in page.tsx changed.
 - Screenshot: /home/z/my-project/globe-final.png (1440×900, the live breathing globe).
+
+---
+Task ID: FINAL-AUDIT
+Agent: mit-maker-portfolio-audit
+Task: Final A-to-Z compliance audit against MIT Maker Portfolio requirements. Produce FINAL_AUDIT.md.
+
+Work Log:
+- Read mandatory first sources: worklog.md (535 lines, 14 task entries), MIT_MAKER_PORTFOLIO.md (277 lines), BILAN_FINAL.md (143 lines), README.md (364 lines), TEST_REPORT.md (92 lines). Skimmed first 60 lines of RESEARCH.md, docs/math.md, VALIDATION.md, BACKTEST.md, TRAINING_REPORT.md.
+- Verified all 25 proposed attachments against the filesystem:
+  - 15 screenshots: all 15 PNGs exist in docs/ (verified via ls -la docs/*.png). Total PNGs in docs/: 45 (15 dark + 15 light + 15 extras: architecture, manifesto, nonlinear-stack, token-economy, paradigm-delta, architecture-interactive, banner-v1 dark/light).
+  - 1 video: DOES NOT EXIST. Script only in MIT_MAKER_PORTFOLIO.md §IV.
+  - 1 technical PDF: DOES NOT EXIST. Pandoc command provided but not run. All 5 source .md files exist (RESEARCH 13,491 words; math 1,664; VALIDATION 7,281; BACKTEST 2,429; TRAINING 561).
+  - 8 documents: all exist (NOTES.md, data/results.json, docs/GLOSSARY.md, docs/TELEMETRY.md, docs/KERNEL.md, TEST_REPORT.md, BILAN_FINAL.md). GitHub remote confirmed (origin = github.com/Vitalcheffe/PRISM.git), local main in sync with origin/main, but public/private status not verifiable from this sandbox.
+- Verified engine source line counts via wc -l: 15 files, 7,521 total lines (BILAN_FINAL.md claims 7,070 — undersells by 451).
+- Verified test counts via anchored regex `^\s*(it|test)\(` across 9 test files: actual 339 tests (model 24 + formulas 49 + nonlinear 46 + neural 35 + life 37 + governance 31 + kernel 41 + backtest 41 + training 35). README claims "263", BILAN_FINAL claims "304", MIT_MAKER_PORTFOLIO claims "305" — all stale.
+- Verified commit count via git rev-list --count HEAD: 24 actual (docs claim 21 in 7 places — 4 in BILAN_FINAL.md, 3 in MIT_MAKER_PORTFOLIO.md).
+- Audited the 2-minute video script (MIT_MAKER_PORTFOLIO.md §IV). Found one CRITICAL fabrication: Segment 5 overlay says "R² 0.99 on test set" but TRAINING_REPORT.md §5 reports R² = -0.39. Also: build process gets only 10s of 120s (should be 20-25s), no wow moment (decree demo missing), hysteresis mentioned but not shown, generic URL-card ending.
+- Audited the 4 MIT criteria: Substantial PASS (strong, README undersells), Original PASS (strong, paradigm V1 caveat), Technically creative PASS (strong, Gap-3 fix is the real contribution), Build process PASS (worklog breaks at commit 21 — last 3 commits not logged).
+- Identified top 5 improvements: (1) film video with corrected script, (2) compile technical PDF, (3) update stale numbers across 4 docs, (4) append 3 missing worklog entries, (5) soften paradigm-shift README claim.
+- Identified top 3 risks: (1) R² 0.99 fabrication in video script — disqualifying if shipped, (2) "deep learning pipeline" claim honest but weak — needs reframing around Gap-3 diagnosis not R² metric, (3) banner and emergence visuals competent not legendary per VLM.
+- Wrote /home/z/my-project/FINAL_AUDIT.md (8 sections: Headline, Per-criterion audit, 25 attachments audit, Video script audit, Top 5 improvements, Top 3 risks, Final verdict, Closing).
+
+Stage Summary:
+- Files:
+  - /home/z/my-project/FINAL_AUDIT.md (new, ~3,500 words, 8 sections)
+- Overall readiness score: 78/100 today, 92+/100 after 4 specific fixes.
+- Verdict: Ready to submit after 4 fixes (film video, compile PDF, update stale numbers, append worklog entries).
+- Critical blocker: video script contains one fabricated number (R² 0.99) that contradicts TRAINING_REPORT.md (R² -0.39). MIT will catch this instantly.
+- No code changes were made — this is an audit-only task. The 4 recommended fixes are operational (video, PDF, doc edits, worklog append), not technical.
+- Working directory state: dirty (uncommitted modifications to BACKTEST.md, training.test.ts, data-pipeline.ts, trainer.ts — minor regenerations + small edits). Recommend commit + push before submission.

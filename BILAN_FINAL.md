@@ -51,7 +51,7 @@
 | 6-9 | Visual system complet : 20 viz sets, gallery, interactive map, GLOSSARY, TELEMETRY, KERNEL |
 | 10 | Kernel câblé dans le live engine + bugs fixés (espérance vie, HDI) |
 | 11 | Frontend connecté : 3 nouvelles vues (Kernel, Life, Govern) live |
-| 12 | 263 tests + validation harness + CI + atmosphere |
+| 12 | 304 tests + validation harness + CI + atmosphere |
 | 13 | Template Over Engineer : math.md, README restructuré, limitations honnêtes |
 | 14 | data/results.json + GitHub link |
 | 15-16 | Paradigm rewrite réel + indicatorModifiers (switch change les indicateurs) |
@@ -74,7 +74,7 @@
 
 ### Résultats (honnêtes)
 
-Le pipeline tourne et produit de vrais nombres. Le R² varie entre runs (0.99 sur un run, -0.39 sur un autre) — le modèle est instable parce que :
+Le pipeline tourne et produit de vrais nombres. Le R² est instable (varie entre runs, parfois négatif) — le modèle est instable parce que :
 - Le trainStep custom n'utilise qu'une backprop simplifiée (couche de sortie seulement)
 - Le LR optimal n'est pas robuste
 - 10,000 samples synthétiques générés depuis les formules = le NN apprend à approximer les formules, pas le monde réel

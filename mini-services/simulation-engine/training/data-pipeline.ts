@@ -35,6 +35,31 @@ export interface Dataset {
     valSize: number;
     testSize: number;
   };
+  // Alias pour compatibilité tests
+  normalization?: {
+    inputMean: Float64Array;
+    inputStd: Float64Array;
+    outputMean: Float64Array;
+    outputStd: Float64Array;
+  };
+}
+
+// Alias pour la compatibilité tests
+export function applyNormalizationToNetwork(network: any, norm: any): void {
+  if (!norm) return;
+  const nn = network;
+  if (norm.inputMean && nn.inputMean) {
+    for (let i = 0; i < norm.inputMean.length; i++) nn.inputMean[i] = norm.inputMean[i];
+  }
+  if (norm.inputStd && nn.inputStd) {
+    for (let i = 0; i < norm.inputStd.length; i++) nn.inputStd[i] = norm.inputStd[i];
+  }
+  if (norm.outputMean && nn.outputMean) {
+    for (let i = 0; i < norm.outputMean.length; i++) nn.outputMean[i] = norm.outputMean[i];
+  }
+  if (norm.outputStd && nn.outputStd) {
+    for (let i = 0; i < norm.outputStd.length; i++) nn.outputStd[i] = norm.outputStd[i];
+  }
 }
 
 // RNG seedé pour la reproductibilité
@@ -102,8 +127,8 @@ function generateSyntheticSample(): Sample {
   return { levers: leverValues, targets, weight: 1.0 };
 }
 
-function generateRealSamples(): Sample[] {
-  // Les 6 points historiques du Maroc, pondérés 10x
+function generateRealSamples(moroccoWeight: number = 10): Sample[] {
+  // Les 6 points historiques du Maroc, pondérés
   const samples: Sample[] = [];
   // Approximer les leviers aux valeurs historiques (proxies)
   // On utilise la baseline comme proxy et on ajuste quelques leviers clés
@@ -136,8 +161,8 @@ function generateRealSamples(): Sample[] {
       if (id === "hdi") return point.hdi;
       return indicators[id] ?? 0;
     });
-    // Pondéré 10x (répliquer l'échantillon 10 fois)
-    for (let w = 0; w < 10; w++) {
+    // Pondéré (répliquer l'échantillon)
+    for (let w = 0; w < moroccoWeight; w++) {
       samples.push({ levers: leverValues, targets, weight: 1.0 });
     }
   }
@@ -167,36 +192,50 @@ function computeStats(samples: Sample[]) {
   return { inputMean, inputStd, outputMean, outputStd };
 }
 
-export function buildDataset(numSynthetic = 10000): Dataset {
-  // Générer les données
+export interface DatasetOptions {
+  numSynthetic?: number;
+  moroccoWeight?: number;
+  includeMorocco?: boolean;
+  trainFrac?: number;
+  valFrac?: number;
+  seed?: number;
+}
+
+export function buildDataset(optsOrNum: number | DatasetOptions = {}): Dataset {
+  const opts = typeof optsOrNum === "number" ? { numSynthetic: optsOrNum } : optsOrNum;
+  const numSynthetic = opts.numSynthetic ?? 10000;
+  const moroccoWeight = opts.moroccoWeight ?? 10;
+  const includeMorocco = opts.includeMorocco ?? true;
+  const trainFrac = opts.trainFrac ?? 0.7;
+  const valFrac = opts.valFrac ?? 0.15;
+  if (trainFrac + valFrac >= 1) throw new Error("trainFrac + valFrac must be < 1");
+  if (opts.seed !== undefined) seed = opts.seed;
+
   const synthetic: Sample[] = [];
   for (let i = 0; i < numSynthetic; i++) {
     const s = generateSyntheticSample();
-    // Filtrer les samples avec NaN/Infinity dans les targets
     if (s.targets.every((v) => isFinite(v)) && s.levers.every((v) => isFinite(v))) {
       synthetic.push(s);
     }
   }
-  const real = generateRealSamples().filter(
-    (s) => s.targets.every((v) => isFinite(v)) && s.levers.every((v) => isFinite(v)),
-  );
+  const real = includeMorocco
+    ? generateRealSamples(moroccoWeight).filter(
+        (s) => s.targets.every((v) => isFinite(v)) && s.levers.every((v) => isFinite(v)),
+      )
+    : [];
 
-  // Combiner et mélanger
   const all = [...synthetic, ...real];
-  // Shuffle déterministe
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));
     [all[i], all[j]] = [all[j], all[i]];
   }
 
-  // Split 70/15/15
-  const trainEnd = Math.floor(all.length * 0.7);
-  const valEnd = Math.floor(all.length * 0.85);
+  const trainEnd = Math.floor(all.length * trainFrac);
+  const valEnd = Math.floor(all.length * (trainFrac + valFrac));
   const train = all.slice(0, trainEnd);
   const val = all.slice(trainEnd, valEnd);
   const test = all.slice(valEnd);
 
-  // Normalisation calculée sur le TRAIN set seulement
   const stats = computeStats(train);
 
   return {
@@ -213,5 +252,30 @@ export function buildDataset(numSynthetic = 10000): Dataset {
       valSize: val.length,
       testSize: test.length,
     },
+    normalization: {
+      inputMean: stats.inputMean,
+      inputStd: stats.inputStd,
+      outputMean: stats.outputMean,
+      outputStd: stats.outputStd,
+    },
   };
+}
+
+// Alias pour la compatibilité avec les tests — retourne une string markdown
+export function datasetSummary(ds: Dataset): string {
+  const s = ds.stats;
+  return `# Dataset Summary
+
+| Split | Size | Source |
+|-------|------|--------|
+| Train | ${s.trainSize} | 70% synthetic + real (weighted) |
+| Val | ${s.valSize} | 15% holdout |
+| Test | ${s.testSize} | 15% holdout (unseen) |
+| **Total** | ${s.totalSamples} | ${s.syntheticSamples} synthetic + ${s.realSamples} real |
+
+## Normalization
+
+- Input dim: ${ds.inputMean.length}
+- Output dim: ${ds.outputMean.length}
+- Stats computed on TRAIN set only`;
 }
