@@ -71,6 +71,7 @@ export default function Home() {
           aria-label="Vue centrale"
           style={{ minHeight: 400 }}
         >
+          <div key={view} className="sd-view-in flex-1 min-h-0 flex flex-col">
           {view === "panneau" && <ForceGraph />}
           {view === "network" && <NetworkView />}
           {view === "neural" && <NeuralView />}
@@ -80,6 +81,7 @@ export default function Home() {
           {view === "life" && <LifeView />}
           {view === "governance" && <GovernanceView />}
           {view === "methodology" && <MethodologyView />}
+          </div>
         </section>
 
         {/* RIGHT — levier sélectionné + décret (320px) */}

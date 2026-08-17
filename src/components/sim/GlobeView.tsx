@@ -445,7 +445,7 @@ function GlobeCenter() {
   const isCrisis = stability < 30;
 
   return (
-    <g>
+    <g className="sd-breathe">
       {/* Disque de fond — fill couleur de stabilité (opacité faible), bord encre */}
       <circle
         cx={0}

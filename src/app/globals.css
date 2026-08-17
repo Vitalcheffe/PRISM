@@ -207,6 +207,26 @@ body {
   animation: sd-pulse-ink 1.6s ease-in-out infinite;
 }
 
+/* Respiration du globe central — le pays respire.
+   Cycle de 6s (10 cycles/min), amplitude subtile (±3%). */
+@keyframes sd-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.sd-breathe {
+  animation: sd-breathe 6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Apparition douce des vues lors du switch */
+@keyframes sd-view-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.sd-view-in {
+  animation: sd-view-in 0.35s ease-out;
+}
+
 @keyframes sd-draw {
   from { stroke-dashoffset: var(--sd-dash, 1000); }
   to { stroke-dashoffset: 0; }

@@ -82,8 +82,9 @@ export function computeGDP(levers: Levers): number {
 
   // X — Exportations
   // = f(compétitivité, change) ; un MAD faible aide les exportations
+  // (un MAD faible = plus de MAD par USD = nos produits sont moins chers en USD)
   const exchangeRate = L(levers, "exchange_rate");
-  const competitiveness = 1 + (10.2 - exchangeRate) * 0.04; // MAD faible = + compétitif
+  const competitiveness = 1 + (exchangeRate - 10.2) * 0.04; // MAD faible = + compétitif
   const X = MACRO_CONSTANTS.exports_baseline_mrd_mad * Math.max(0.7, Math.min(1.3, competitiveness));
 
   // M — Importations
@@ -244,7 +245,11 @@ export function computeHDI(levers: Levers): number {
   const gniPpp = gdpPerCapita * 0.22; // approximation PPP en USD
   const incomeIndex = Math.max(0, Math.min(1, (Math.log(Math.max(100, gniPpp)) - Math.log(100)) / (Math.log(75000) - Math.log(100))));
 
-  return Math.cbrt(Math.max(0, lifeIndex * eduIndex * incomeIndex));
+  // HDI est défini sur [0, 1] par construction (PNUD). On clampe explicitement
+  // car lifeIndex peut dépasser 1 (lifeExpectancy peut atteindre 90, or l'IDH
+  // normalise sur [20, 85]). Sans ce clampe, des leviers hors-bornes (par ex.
+  // doctors_per_1k = 100) font remonter HDI à 1.23 — un non-sens physique.
+  return Math.min(1, Math.cbrt(Math.max(0, lifeIndex * eduIndex * incomeIndex)));
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -285,7 +290,8 @@ export function computeBalanceOfTrade(levers: Levers): number {
   const gdp = computeGDP(levers);
   const baseline = MACRO_CONSTANTS.gdp_baseline_mrd_mad;
   const exchangeRate = L(levers, "exchange_rate");
-  const competitiveness = Math.max(0.7, Math.min(1.3, 1 + (10.2 - exchangeRate) * 0.04));
+  // MAD faible (exchange_rate élevé) → exports plus compétitifs
+  const competitiveness = Math.max(0.7, Math.min(1.3, 1 + (exchangeRate - 10.2) * 0.04));
   const X = MACRO_CONSTANTS.exports_baseline_mrd_mad * competitiveness;
   const importDemand = (computeGDP(levers) * 0.9 + computePublicSpending(levers)) / (baseline * 1.15);
   const importRate = Math.max(0.6, Math.min(1.4, importDemand));

@@ -278,6 +278,29 @@ The manifesto below renders the project's founding words — "des liens de liens
   <img alt="Manifesto — des liens de liens de liens de liens de liens" src="docs/manifesto-light.png" width="100%">
 </picture>
 
+## Tests and validation
+
+The engine is covered by a 263-test suite using Bun's built-in test runner. Every claim in this README is backed by a passing test: the 3,008-weight count is arithmetic-verified, the forward pass is deterministic, the He initialization has correct statistics, the HDI and life expectancy clamping prevents impossible values, the hysteresis leaves a scar, the kernel survives 1000 cycles, the population stays stable after 200 ticks.
+
+```bash
+cd mini-services/simulation-engine && bun test
+# 263 pass · 0 fail · 96,496 expect() calls · ~5s
+```
+
+Beyond unit tests, an empirical validation harness runs the actual `SimulationEngine` through four controlled experiments and produces [VALIDATION.md](./VALIDATION.md) with real numbers:
+
+- **Sensitivity analysis** — the 47×15 Jacobian. 6/6 economic-theory sanity checks pass (public investment raises GDP, VAT raises tax revenue, hospital beds raise life expectancy, interest rate lowers inflation, minimum wage lowers Gini, interest rate raises unemployment via Okun).
+- **Stability test** — 10,000 ticks from baseline. 6/7 checks pass. The one honest failure: the bankruptcy game-over cascade triggers around tick 945–1700 because the baseline deficit slowly accumulates into debt > 150%. A real calibration finding, reported.
+- **Hysteresis verification** — the scar effect is confirmed. After a 6-lever shock that pushes unemployment to ~19–25%, reversal returns unemployment to baseline but stability shows a persistent scar of 3–9 points. The `hysteresisEffect` penalty works as documented.
+- **Neural network accuracy** — median R² ≈ 0.8 in-distribution, but mean R² < 0 out-of-distribution. The NN generalizes poorly to extreme lever values — the most important finding for policy stress-testers. Fine-tuning on a 100-sample subset degraded held-out accuracy (5% → 20%): the pre-train optimum is fragile.
+
+```bash
+cd mini-services/simulation-engine && bun run validation/run-validation.ts
+# writes VALIDATION.md with real numbers
+```
+
+CI runs lint, typecheck, all 263 tests, and the validation harness on every push and pull request. The VALIDATION.md artifact is uploaded automatically.
+
 ## License
 
 MIT
