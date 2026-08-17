@@ -365,6 +365,23 @@ export class SimulationEngine {
     // La croissance du PIB = (gdp - prevGdp) / prevGdp
     indicators.gdp_growth = this.prevGdp > 0 ? ((gdp - this.prevGdp) / this.prevGdp) * 100 : 0;
 
+    // ── MODIFICATEURS DE PARADIGME ──
+    // Le paradigme courant applique des offsets directs aux indicateurs.
+    // Cela reflète l'effet structurel du régime politique : sous planification,
+    // le plein emploi est garanti mais le PIB baisse ; sous libéralisme, le PIB
+    // monte mais les inégalités augmentent. Les multiplicateurs (gdp) sont
+    // appliqués avant les offsets additifs.
+    const mods = this.paradigm.indicatorModifiers;
+    if (mods) {
+      for (const [id, mod] of Object.entries(mods)) {
+        if (id === "gdp" && typeof mod === "number") {
+          indicators.gdp = (indicators.gdp ?? gdp) * mod;
+        } else if (indicators[id] !== undefined && typeof mod === "number") {
+          indicators[id] = indicators[id] + mod;
+        }
+      }
+    }
+
     // ── NON-LINÉARITÉS POST-RÉSEAU ──
     // Le réseau donne une base linéaire. On applique ensuite des corrections
     // non-linéaires qui modélisent les phénomènes économiques réels : seuils

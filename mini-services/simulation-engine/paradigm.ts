@@ -24,28 +24,27 @@ export interface Paradigm {
   name: string;
   description: string;
   // Multiplicateurs de poids par catégorie (réécrit la matrice W)
-  // ex: { economy: 1.3, governance: 0.7 } → les arêtes économiques sont amplifiées,
-  //     les arêtes de gouvernance sont atténuées.
   weightMask: Record<string, number>;
-  // Inversions de polarité : certaines arêtes voient leur signe inversé
-  // ex: ["interest_rate→public_investment"] → sous planification, hausse taux
-  //     n'inhibe plus l'investissement public (État investit quoi qu'il arrive)
+  // Inversions de polarité
   polarityFlip: string[];
-  // Modificateur de friction systémique (vitesse de propagation)
-  // > 1 = système plus réactif (changements rapides)
-  // < 1 = système plus visqueux (changements lents)
+  // Modificateur de friction systémique
   frictionModifier: number;
-  // Modificateur de seuil critique (tolérance thermique)
-  // > 1 = seuils plus élevés (le système tolère plus avant de rompre)
-  // < 1 = seuils plus bas (le système est fragile)
+  // Modificateur de seuil critique
   criticalThresholdModifier: number;
   // Comportement des agents sous ce régime
   agentBehavior: {
-    trustBase: number;      // confiance de base des agents (0-1)
-    stressVolatility: number; // volatilité du stress (0-1)
-    capitalMobility: number;  // mobilité du capital (0-1, fuite facile)
-    panicThreshold: number;   // seuil de panique (0-1)
+    trustBase: number;
+    stressVolatility: number;
+    capitalMobility: number;
+    panicThreshold: number;
   };
+  // V2 : Modificateurs directs d'indicateurs.
+  // Le NN pré-entraîné a des poids de couche d'entrée négligeables (les biais
+  // dominent), donc le weightMask seul ne change pas visiblement les outputs.
+  // Ces modificateurs appliquent des offsets directs aux indicateurs pour
+  // refléter l'effet du régime. Ex: planned → gdp_growth boost, stability boost,
+  // mais unemployment reduction. Liberal → gdp boost mais inequality rise.
+  indicatorModifiers?: Record<string, number>;
 }
 
 export const PARADIGMS: Record<ParadigmId, Paradigm> = {
@@ -64,13 +63,21 @@ export const PARADIGMS: Record<ParadigmId, Paradigm> = {
       environment: 0.85,
     },
     polarityFlip: [],
-    frictionModifier: 1.2,    // système réactif
-    criticalThresholdModifier: 0.95, // légèrement plus fragile
+    frictionModifier: 1.2,
+    criticalThresholdModifier: 0.95,
     agentBehavior: {
       trustBase: 0.5,
       stressVolatility: 0.7,
-      capitalMobility: 0.9,   // capital très mobile (fuite facile)
+      capitalMobility: 0.9,
       panicThreshold: 0.6,
+    },
+    indicatorModifiers: {
+      gdp: 1.03,           // +3% GDP (marché libre dynamique)
+      gdp_growth: 0.8,    // +0.8 pp croissance
+      unemployment: 1.5,  // +1.5 pp chômage (précarité)
+      gini: 0.04,         // +0.04 inégalités
+      poverty_rate: 2.0,  // +2 pp pauvreté
+      stability: -3,      // -3 stabilité (instabilité politique)
     },
   },
   planned: {
@@ -87,15 +94,23 @@ export const PARADIGMS: Record<ParadigmId, Paradigm> = {
       demographics: 1.0,
       environment: 1.1,
     },
-    // Sous planification, hausse des taux n'inhibe pas l'investissement public
     polarityFlip: ["interest_rate→public_investment"],
-    frictionModifier: 0.8,    // système visqueux (changements lents)
-    criticalThresholdModifier: 1.2, // plus tolérant
+    frictionModifier: 0.8,
+    criticalThresholdModifier: 1.2,
     agentBehavior: {
       trustBase: 0.6,
       stressVolatility: 0.4,
-      capitalMobility: 0.2,   // capital peu mobile (contrôlé)
+      capitalMobility: 0.2,
       panicThreshold: 0.8,
+    },
+    indicatorModifiers: {
+      gdp: 0.97,           // -3% GDP (inefficacité planifiée)
+      gdp_growth: -0.5,   // -0.5 pp croissance
+      unemployment: -2.0,  // -2 pp chômage (plein emploi garanti)
+      gini: -0.05,        // -0.05 inégalités (redistribution)
+      poverty_rate: -3.0, // -3 pp pauvreté
+      stability: 5,       // +5 stabilité (ordre étatique)
+      debt_to_gdp: 8,     // +8 pp dette (dépenses publiques)
     },
   },
   technocracy: {
@@ -121,6 +136,14 @@ export const PARADIGMS: Record<ParadigmId, Paradigm> = {
       capitalMobility: 0.6,
       panicThreshold: 0.65,
     },
+    indicatorModifiers: {
+      gdp: 1.05,           // +5% GDP (productivité)
+      gdp_growth: 1.2,    // +1.2 pp croissance
+      life_expectancy: 1.5, // +1.5 ans (santé data-driven)
+      hdi: 0.02,          // +0.02 HDI (éducation dopée)
+      gini: 0.02,         // +0.02 inégalités (élite technique)
+      stability: 2,       // +2 stabilité (compétence)
+    },
   },
   authoritarian: {
     id: "authoritarian",
@@ -137,13 +160,22 @@ export const PARADIGMS: Record<ParadigmId, Paradigm> = {
       environment: 0.9,
     },
     polarityFlip: [],
-    frictionModifier: 0.7,    // système très visqueux (changements bloqués)
-    criticalThresholdModifier: 1.3, // tolérant en surface...
+    frictionModifier: 0.7,
+    criticalThresholdModifier: 1.3,
     agentBehavior: {
-      trustBase: 0.3,         // ...mais confiance basse
-      stressVolatility: 0.8,  // stress volatil
-      capitalMobility: 0.3,   // capital contrôlé
-      panicThreshold: 0.5,    // panique facile (sous tension)
+      trustBase: 0.3,
+      stressVolatility: 0.8,
+      capitalMobility: 0.3,
+      panicThreshold: 0.5,
+    },
+    indicatorModifiers: {
+      gdp: 0.98,           // -2% GDP (inefficacité, corruption)
+      gdp_growth: -0.3,   // -0.3 pp croissance
+      unemployment: -1.0,  // -1 pp chômage (contraint)
+      gini: 0.05,         // +0.05 inégalités (élite au pouvoir)
+      stability: 8,       // +8 stabilité affichée (surface)
+      revolution_risk: -5, // -5 risque affiché (répression)
+      poverty_rate: 1.5,  // +1.5 pp pauvreté
     },
   },
   transition: {
@@ -161,13 +193,21 @@ export const PARADIGMS: Record<ParadigmId, Paradigm> = {
       environment: 1.15,
     },
     polarityFlip: [],
-    frictionModifier: 1.5,    // très réactif (volatile)
-    criticalThresholdModifier: 0.8, // fragile
+    frictionModifier: 1.5,
+    criticalThresholdModifier: 0.8,
     agentBehavior: {
       trustBase: 0.35,
       stressVolatility: 0.9,
-      capitalMobility: 0.8,   // fuite pendant l'incertitude
-      panicThreshold: 0.4,    // panique très facile
+      capitalMobility: 0.8,
+      panicThreshold: 0.4,
+    },
+    indicatorModifiers: {
+      gdp: 0.95,           // -5% GDP (incertitude)
+      gdp_growth: -1.5,   // -1.5 pp croissance
+      unemployment: 3.0,   // +3 pp chômage (turbulence)
+      inflation: 2.0,     // +2 pp inflation (instabilité monétaire)
+      stability: -10,     // -10 stabilité (volatilité)
+      revolution_risk: 8, // +8 risque révolution
     },
   },
 };
