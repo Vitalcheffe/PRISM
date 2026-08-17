@@ -2,11 +2,55 @@
 
 A non-linear macroeconomic simulator. 47 real policy levers feed a 3,008-weight neural network that computes 15 economic indicators. 10,000 autonomous agents across 8 political factions react in real time. Causal relationships are extracted from live World Bank and IMF reports by an LLM — not hardcoded.
 
+3,008 weights · 10,000 agents · 47 levers · 8 factions · 7 non-linearities
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/banner-v2-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="docs/banner-v2-light.png">
   <img alt="PRISM" src="docs/banner-v2-light.png" width="100%">
 </picture>
+
+---
+
+## Overview
+
+PRISM is a research testbed for non-linear macroeconomic policy simulation, calibrated to real Moroccan data. It lets you adjust any of 47 policy levers and watch 15 economic indicators recompute in real time through a trained neural network, while 10,000 autonomous agents react across 8 political factions. It is not a product, not a predictor, and not a substitute for economic expertise — it is an instrument for reasoning about policy under uncertainty.
+
+---
+
+## Why I built this
+
+I built PRISM because policy decisions are made on intuition, and intuition is wrong about non-linear systems. The original idea was simple: a small country simulation game to avoid false good ideas. But the gap between "I think raising the minimum wage helps" and "here is what happens to unemployment, inflation, debt, and political stability over 24 months" is enormous, and that gap is where bad policy lives.
+
+I wanted to formalize the everyday reality of a country — its budget, its demographics, its political factions, its crises — with disproportionate mathematical rigor. A 3,008-weight neural network approximating economic formulas. Seven non-linear layers modeling thresholds, bifurcations, hysteresis, and thermodynamic equilibrium. Ten thousand agents with trust, stress, and behavior. Causal edges extracted from real World Bank reports by an LLM. No mock data.
+
+The math is grounded in Okun's law, the Phillips curve, the UNDP HDI formula, and Reinhart-Rogoff debt thresholds. The neural network is a custom MLP implemented from scratch in TypeScript — no TensorFlow, no PyTorch. The goal is the MIT Maker Portfolio bar: a build process that shows how an engineer thinks, not just what they shipped.
+
+---
+
+## Table of contents
+
+- [Overview](#overview)
+- [Why I built this](#why-i-built-this)
+- [The reactor](#the-reactor)
+- [The neural network](#the-neural-network)
+- [The agent swarm](#the-agent-swarm)
+- [The causal graph](#the-causal-graph)
+- [The decree engine](#the-decree-engine)
+- [Black swan events](#black-swan-events)
+- [The paradigm engine](#the-paradigm-engine)
+- [The kernel](#the-kernel)
+- [The life system](#the-life-system)
+- [The governance system](#the-governance-system)
+- [Emergence](#emergence)
+- [How it works](#how-it-works)
+- [Tests and validation](#tests-and-validation)
+- [Run it](#run-it)
+- [Stack](#stack)
+- [Limitations](#limitations)
+- [License](#license)
+
+---
 
 ## The reactor
 
@@ -120,19 +164,13 @@ You cannot maximize one sector without paying for it elsewhere. The system conse
 
 ## How it works
 
-You pick a policy lever — say, the VAT rate. You drag it from 20% to 25%. The neural network forward-passes the new lever vector and produces updated values for GDP, unemployment, inflation, debt-to-GDP, life expectancy, HDI, Gini, and seven other indicators. These aren't formulas — they're learned weights that approximate the economic relationships discovered in real data.
-
-Meanwhile, 10,000 agents across 8 factions update their trust, stress, and behavior. If stress crosses a threshold, agents start striking, rioting, or rebelling. The system detects political threats: coup risk, civil war probability, revolution likelihood.
-
-Seven layers of non-linearity sit between the neural network output and the final indicators:
-
-- Debt above 80% of GDP triggers exponential risk (not linear)
-- Inflation above 8% enters a self-reinforcing spiral
-- Unemployment above 15% causes a bifurcation — the system jumps to a different regime
-- Hysteresis: once a crisis happens, the system remembers it. Recovery doesn't erase the scar
-- Feedback loops amplify instability up to a saturation point
-- Cascade effects: high revolution risk triggers secondary collapses
-- Thermodynamic equilibrium: over-optimizing one sector penalizes the whole system
+1. **Model** — 47 policy levers (real Moroccan data from World Bank WDI, Loi de Finances, Bank Al-Maghrib, IMF Article IV, UN PAGE) are the inputs. 15 economic indicators (GDP, unemployment, inflation, HDI, Gini, etc.) are the outputs. The mapping is a 47→32→32→15 MLP with 3,008 weights, pre-trained on economic formulas (Okun's law, Phillips curve, UNDP HDI, Reinhart-Rogoff thresholds) and fine-tunable via backpropagation.
+2. **Extract** — an NLP causal extractor reads World Bank/IMF report URLs, sends the text to an LLM, and extracts quantified causal edges (coefficient, delay, confidence, provenance URL) persisted to SQLite. The more documents fed, the denser the causal graph.
+3. **Transform** — seven non-linear layers sit between the neural output and the final indicators: critical thresholds (debt > 80%), bifurcation (unemployment > 15%), hysteresis (the scar that recovery doesn't erase), feedback loops, cascades, exponential runaway, and thermodynamic equilibrium.
+4. **Swarm** — 10,000 autonomous agents across 8 factions (labor, employers, military, clergy, youth, rural, urban elite, informal) update their trust, stress, and behavior every tick. When stress crosses 0.7, agents strike, riot, or rebel. Political threats (coup, civil war, revolution) are aggregated from the swarm state.
+5. **Govern** — the Kernel runs a 12-phase lifecycle every 200ms tick. The Life system ages agents (birth, education, work, reproduction, death — population stable at 10,000). The Governance system manages 8 ministries with real budget allocations (500 Mrd MAD total) and bureaucratic leakage.
+6. **Decree** — type a decree in French. The engine parses 38 NLP patterns, computes lever deltas and fiscal cost, projects 2 years forward, and returns a verdict: favorable, mitigé, défavorable, or catastrophique.
+7. **Validate** — a 263-test suite verifies every claim. An empirical harness runs sensitivity analysis (47×15 Jacobian), stability tests (10,000 ticks), hysteresis verification (the scar), and neural network accuracy (R²). Results are in VALIDATION.md.
 
 ## NLP causal extraction
 
@@ -188,7 +226,7 @@ Every one of the 47 levers traces to one of these five sources. Zero mock data.
 
 ## Research methodology
 
-The full mathematical formalism, computational architecture, validation framework, and limitations are documented in [RESEARCH.md](./RESEARCH.md). It covers the neural network equations, the seven non-linear layers, the agent swarm update rules, the causal extraction pipeline, and a comparison with DSGE and DCGE models. The original design notes, preserved word-for-word and progressively visualized, are in [NOTES.md](./NOTES.md).
+The full mathematical formalism is in [docs/math.md](./docs/math.md) — the forward pass equations, weight count derivation, He initialization, the seven non-linear layers with their mathematical forms, the economic formulas (Okun, Phillips, HDI, Gini), the agent swarm update rules, and the hysteresis model. The computational architecture, validation framework, and comparison with DSGE/DCGE models are in [RESEARCH.md](./RESEARCH.md). The original design notes, preserved word-for-word and progressively visualized, are in [NOTES.md](./NOTES.md).
 
 ## Run it
 
@@ -301,6 +339,26 @@ cd mini-services/simulation-engine && bun run validation/run-validation.ts
 
 CI runs lint, typecheck, all 263 tests, and the validation harness on every push and pull request. The VALIDATION.md artifact is uploaded automatically.
 
+## Limitations
+
+1. **The neural network generalizes poorly out-of-distribution.** Median R² is ~0.8 for lever values near the baseline, but drops below 0 for extreme values. A policymaker stress-testing an unusual lever configuration cannot trust the NN's output. Fine-tuning on a 100-sample subset degraded held-out accuracy from 5% to 20% — the pre-train optimum is fragile, and more data does not reliably help.
+2. **No historical backtesting against real time series.** The validation harness tests internal consistency (sensitivity, stability, hysteresis) but does not compare predicted trajectories against Morocco's actual economic history. A proper backtest would require yearly indicator data from 2000–2023, which is not yet integrated.
+3. **The agent swarm is homogeneous within factions.** All 10,000 agents share the same update equations within their faction. Real populations have heterogeneous preferences, information sets, and behavioral rules. The swarm captures faction-level dynamics but misses intra-faction diversity.
+4. **The paradigm weight-matrix rewrite is a V1 placeholder.** Switching political regime (liberalism → planned) currently applies a parameter mask, not a true restructuring of the weight matrix. The polarity inversion shown in the paradigm-delta visualization is architectural intent, not implemented behavior. Documented in RESEARCH.md §8.3.
+5. **Black swan probabilities are heuristic, not calibrated.** The 10 crisis types have base probabilities tuned by hand, not fitted to historical crisis frequency. The fragility index scales them, but the scaling function is a design choice, not an empirical estimate. A calibrated model would require a crisis event database (e.g., Reinhart-Rogoff banking crisis dates).
+6. **The bankruptcy cascade triggers unrealistically early.** In the 10,000-tick stability test, the game-over cascade fires around tick 945–1700 (~40–70 simulated years) because the baseline deficit accumulates into debt > 150%. This is a calibration issue — the baseline fiscal trajectory is too pessimistic — not a feature.
+7. **The NLP causal extractor depends on an external LLM.** Edge extraction quality is bounded by the LLM's understanding of economic text. No confidence calibration is performed on the LLM's output; edges are accepted if the LLM returns a valid coefficient and a non-empty rationale.
+
 ## License
 
 MIT
+
+---
+
+<div align="center">
+
+PRISM · Amine Harch El Korane · 2026
+
+*"La vie n'est pas simulée. Elle émerge."*
+
+</div>
