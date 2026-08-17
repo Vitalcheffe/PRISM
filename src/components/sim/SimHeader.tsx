@@ -109,6 +109,17 @@ export function SimHeader() {
 
         {/* DROITE — contrôles */}
         <div className="flex items-center gap-3">
+          <a
+            href="https://github.com/Vitalcheffe/PRISM"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[var(--ink-mute)] hover:text-[var(--ink)] transition-colors hidden lg:inline"
+            style={{ fontSize: 10, letterSpacing: "0.08em", textDecoration: "none" }}
+            aria-label="GitHub repository"
+            title="GitHub — source, docs, gallery, interactive map"
+          >
+            GITHUB ↗
+          </a>
           <div className="flex items-center gap-1.5">
             <span
               className="font-mono text-[var(--ink)]"

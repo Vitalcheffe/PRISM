@@ -1,0 +1,64 @@
+{
+  "project": "PRISM",
+  "date": "2026-08-17",
+  "kernel_version": "1.0.0",
+  "parameters": {
+    "levers": 47,
+    "indicators": 15,
+    "categories": 8,
+    "neural_weights": 3008,
+    "architecture": "47→32→32→15",
+    "agents": 10000,
+    "factions": 8,
+    "nonlinear_layers": 7,
+    "paradigms": 5,
+    "black_swan_types": 10,
+    "decree_patterns": 38,
+    "tick_ms": 200
+  },
+  "steady_state": {
+    "tick": 100,
+    "gdp_mrd_mad": 1443,
+    "gdp_growth_pct": 0,
+    "unemployment_pct": 9.6,
+    "inflation_pct": 1.9,
+    "debt_to_gdp_pct": 62.2,
+    "life_expectancy": 72.2,
+    "hdi": 0.731,
+    "gini": 0.394,
+    "stability": 72.8,
+    "revolution_risk": 23.7
+  },
+  "neural_network": {
+    "epoch": 30,
+    "total_samples": 6000,
+    "last_loss": 0.003,
+    "max_weight": 1.1608,
+    "avg_weight": 0.1808
+  },
+  "demographics": {
+    "medianAge": 28,
+    "birthRate": 5.854730742331902,
+    "deathRate": 12.748526326306324,
+    "dependencyRatio": 71.18180263382932,
+    "populationGrowth": -0.6893795583974422,
+    "population": 10009
+  },
+  "governance": {
+    "totalBudget": 500,
+    "totalSpent": 355.63723314210444,
+    "totalLeakage": 146.72693445469469,
+    "avgCapacity": 0.6191303240171374,
+    "avgServiceQuality": 0.7752825666925787,
+    "avgEfficiency": 0.7113287126877222,
+    "corruptionIndex": 29.345270341310787
+  },
+  "validation": {
+    "tests": 263,
+    "test_files": 7,
+    "sensitivity_checks_pass": "6/6",
+    "stability_ticks": 10000,
+    "hysteresis_scar_confirmed": true,
+    "nn_median_r2_in_distribution": "~0.8"
+  }
+}
