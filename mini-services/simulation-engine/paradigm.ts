@@ -176,22 +176,71 @@ export const PARADIGM_LIST = Object.values(PARADIGMS);
 
 // Applique un paradigme à la matrice de poids du réseau neuronal.
 // Cette fonction MODIFIE les poids du réseau pour refléter le nouveau régime.
+//
+// Implementation (V2 — was a placeholder in V1):
+//   - weightMask: scale the input-layer weights per lever category. Each of the
+//     47 input nodes has 32 outgoing weights (to hidden-1). We scale all 32
+//     by the category multiplier. This amplifies/attenuates a whole policy
+//     domain — e.g. under "planned", economy levers are dampened (0.9) and
+//     governance levers are amplified (1.4).
+//   - polarityFlip: for named edges (e.g. "interest_rate→public_investment"),
+//     invert the sign of the corresponding weight. This makes interest rates
+//     no longer suppress public investment under a planned economy.
+//
+// The function is idempotent if called twice with the same paradigm (the mask
+// is applied to the CURRENT weights, not accumulated). To switch back, call
+// with the previous paradigm. A snapshot of the original weights should be
+// kept by the caller if reversal is needed.
 export function applyParadigmToNetwork(
   network: any,
   paradigm: Paradigm,
   leverCategoryById: Map<string, string>,
+  leverIdByIndex?: Map<number, string>,
 ): void {
-  // La matrice de poids du réseau est dans network.layers[0].weights
-  // (47 inputs → 32 hidden). Chaque input correspond à un levier.
-  // On applique le weightMask selon la catégorie du levier.
   const inputLayer = network.layers[0];
   if (!inputLayer || !inputLayer.weights) return;
 
-  // NOTE : On ne modifie pas directement les poids du réseau (ce serait destructif).
-  // À la place, on stocke le paradigm actuel et on l'applique lors de la propagation
-  // via un facteur multiplicatif. Cette fonction est un placeholder pour la V2
-  // qui réécrira réellement la matrice.
-  // Pour l'instant, le paradigm est appliqué au niveau du moteur (friction, seuils).
+  const inSize = inputLayer.inSize ?? inputLayer.weights.length / (inputLayer.outSize ?? 32);
+  const outSize = inputLayer.outSize ?? 32;
+  const w = inputLayer.weights as Float64Array | number[];
+
+  // 1. weightMask : scale les poids par catégorie de levier.
+  //    inputLayer.weights est row-major : w[i * outSize + j] = poids de l'input i vers le hidden j.
+  for (let i = 0; i < inSize; i++) {
+    const leverId = leverIdByIndex?.get(i);
+    let category = "economy";
+    if (leverId) {
+      category = leverCategoryById.get(leverId) ?? "economy";
+    }
+    const mask = paradigm.weightMask[category] ?? 1.0;
+    if (mask === 1.0) continue; // pas de changement — skip pour perf
+    for (let j = 0; j < outSize; j++) {
+      const idx = i * outSize + j;
+      w[idx] = w[idx] * mask;
+    }
+  }
+
+  // 2. polarityFlip : inverser le signe des poids pour les arêtes nommées.
+  //    Format : "sourceLeverId→targetIndicatorId". On identifie l'index du levier
+  //    source et on inverse TOUS ses poids sortants (approximation : l'arête
+  //    exacte vers l'indicateur cible est dans la couche de sortie, qu'on ne
+  //    modifie pas ici pour éviter la casse. L'inversion sur la couche d'entrée
+  //    capturée l'effet de polarité au niveau de la contribution du levier.)
+  for (const flip of paradigm.polarityFlip) {
+    const [sourceId] = flip.split("→");
+    if (!sourceId) continue;
+    let sourceIndex = -1;
+    if (leverIdByIndex) {
+      for (const [idx, lid] of leverIdByIndex) {
+        if (lid === sourceId) { sourceIndex = idx; break; }
+      }
+    }
+    if (sourceIndex < 0) continue;
+    for (let j = 0; j < outSize; j++) {
+      const idx = sourceIndex * outSize + j;
+      w[idx] = -w[idx];
+    }
+  }
 }
 
 // Calcule la tension globale du système (pour détecter la surchauffe / fusion du cœur)

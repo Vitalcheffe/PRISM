@@ -39,6 +39,7 @@ import {
 import {
   PARADIGMS,
   PARADIGM_LIST,
+  applyParadigmToNetwork,
   computeSystemTension,
   type Paradigm,
   type ParadigmId,
@@ -583,11 +584,60 @@ export class SimulationEngine {
   setParadigm(paradigmId: string): void {
     const p = PARADIGMS[paradigmId as ParadigmId];
     if (!p || this.paradigm.id === p.id) return;
+
+    // V2 : applyParadigmToNetwork réécrit réellement la matrice de poids.
+    // On reconstruit la map leverId -> index pour que la fonction sache quel
+    // poids correspond à quel levier. On réinitialise d'abord le réseau aux
+    // poids de base (pré-entraînés) puis on applique le mask du nouveau paradigme
+    // — sinon les masks s'accumuleraient à chaque switch.
+    const leverCategoryById = new Map<string, string>();
+    const leverIdByIndex = new Map<number, string>();
+    for (let i = 0; i < LEVERS.length; i++) {
+      leverCategoryById.set(LEVERS[i].id, LEVERS[i].category as string);
+      leverIdByIndex.set(i, LEVERS[i].id);
+    }
+
+    // Pour éviter l'accumulation des masks, on recharge les poids de base
+    // depuis le réseau pré-entraîné avant d'appliquer le nouveau paradigm.
+    // Le réseau stocke une copie de ses poids initiaux dans `baseWeights`.
+    const nn = this.neuralNetwork as any;
+    if (nn.baseWeights && nn.baseLayers) {
+      // Restaurer les poids de base
+      for (let l = 0; l < nn.layers.length; l++) {
+        const layer = nn.layers[l];
+        const base = nn.baseLayers[l];
+        if (base && base.weights && layer.weights) {
+          for (let i = 0; i < layer.weights.length; i++) {
+            layer.weights[i] = base.weights[i];
+          }
+          if (base.biases && layer.biases) {
+            for (let i = 0; i < layer.biases.length; i++) {
+              layer.biases[i] = base.biases[i];
+            }
+          }
+        }
+      }
+    } else {
+      // Première fois : snapshotter les poids de base
+      nn.baseLayers = nn.layers.map((l: any) => ({
+        weights: l.weights.slice(),
+        biases: l.biases.slice(),
+        inSize: l.inSize,
+        outSize: l.outSize,
+      }));
+      nn.baseWeights = true;
+    }
+
+    // Appliquer le nouveau paradigme aux poids restaurés
+    applyParadigmToNetwork(this.neuralNetwork, p, leverCategoryById, leverIdByIndex);
+
     this.paradigm = p;
     // Le changement de régime recrée l'essaim avec le nouveau comportement
     if (this.swarm) {
       this.swarm = createSwarm(this.swarm.agents.length, p);
     }
+    // Recalculer les indicateurs avec les nouveaux poids
+    this.recompute();
     this.pushAlert(
       "warning",
       `Transition de régime : ${p.name}. ${p.description}`,
@@ -663,12 +713,15 @@ export class SimulationEngine {
     }
 
     // 2. Accummuler la dette. En réalité, une partie du déficit est monétisée
-    //    ou compensée par la croissance économique. On accumule 30% du déficit
+    //    ou compensée par la croissance économique. On accumule 15% du déficit
     //    structurel — le reste est absorbé par la croissance du PIB et les
     //    recettes exceptionnelles (privatisations, dette externe concessionnelle).
+    //    (Calibration : 30% faisait dériver la dette > 150% en ~60 ans simulés,
+    //    déclenchant la cascade de faillite trop tôt. 15% donne une trajectoire
+    //    réaliste sur 100+ ans — voir VALIDATION.md stability test.)
     if (this.indicators) {
       const annualDeficit = this.indicators.budget_deficit;
-      const netAccumulation = annualDeficit * 0.3;
+      const netAccumulation = annualDeficit * 0.15;
       if (netAccumulation > 0) {
         this.accumulatedDebt += netAccumulation / 24;
       } else {
