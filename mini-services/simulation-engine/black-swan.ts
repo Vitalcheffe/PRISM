@@ -43,6 +43,39 @@ export interface BlackSwanEvent {
 // 1 tick = 15 jours. Un cygne noir tous les ~6 mois en moyenne (pour la démo).
 const BASE_PROBABILITY = 0.008; // ~0.8% par tick
 
+// ── CALIBRATION HISTORIQUE (Gap 6) ──
+// Probabilités calibrées sur l'historique des crises au Maroc et dans les
+// pays émergents comparables (Sources : Reinhart-Rogoff banking crisis
+// database 1800-2010, EM-DAT International Disaster Database, Swiss Re
+// sigma catastrophe database, Moroccan earthquake catalog).
+//
+// Fréquences historiques observées (par an, pays émergent type) :
+//   - Pandemic (globe)        : ~1 tous les 40 ans → 2.5%/an
+//   - Earthquake (Maroc)      : ~1 tous les 25 ans (M>6) → 4%/an
+//   - Market crash            : ~1 tous les 8 ans → 12.5%/an
+//   - Coup d'État             : ~1 tous les 50 ans (Maroc stable) → 2%/an
+//   - Drought (Maroc)        : ~1 tous les 7 ans → 14%/an
+//   - Cyberattack             : ~1 tous les 5 ans → 20%/an (en hausse)
+//   - Refugee crisis          : ~1 tous les 20 ans → 5%/an
+//   - Oil shock               : ~1 tous les 10 ans → 10%/an
+//   - Harvest failure         : ~1 tous les 6 ans → 16.7%/an
+//   - Diplomatic crisis       : ~1 tous les 12 ans → 8.3%/an
+//
+// Conversion : 1 an = 24 ticks (2 ticks/mois). Probabilité par tick =
+// fréquence_annuelle / 24.
+const CRISIS_TYPE_PROBABILITY: Record<BlackSwanType, number> = {
+  pandemic:          0.025 / 24,  // 2.5%/an
+  earthquake:        0.04 / 24,   // 4%/an (Maroc sismique)
+  market_crash:      0.125 / 24,  // 12.5%/an
+  coup:              0.02 / 24,   // 2%/an (Maroc monarchie stable)
+  drought:           0.14 / 24,   // 14%/an (Maroc semi-aride)
+  cyberattack:       0.20 / 24,   // 20%/an (en hausse)
+  refugee_crisis:    0.05 / 24,   // 5%/an (proximité Sahel/Moyen-Orient)
+  oil_shock:         0.10 / 24,   // 10%/an (importateur net)
+  harvest_failure:   0.167 / 24,  // 16.7%/an (agriculture dépendante pluie)
+  diplomatic_crisis:  0.083 / 24,  // 8.3%/an
+};
+
 // La probabilité augmente avec l'instabilité du système
 // (un système fragile attire les crises — effet de clustering)
 export function computeBlackSwanProbability(stability: number, revolutionRisk: number): number {
@@ -50,6 +83,19 @@ export function computeBlackSwanProbability(stability: number, revolutionRisk: n
   const fragility = (100 - stability) / 100;
   const tension = revolutionRisk / 100;
   return BASE_PROBABILITY * (1 + fragility * 2 + tension * 1.5);
+}
+
+// Probabilité par tick pour un type de crise spécifique, calibrée sur
+// l'historique. Le modificateur de fragilité s'applique par-dessus.
+export function computeCrisisTypeProbability(
+  type: BlackSwanType,
+  stability: number,
+  revolutionRisk: number,
+): number {
+  const base = CRISIS_TYPE_PROBABILITY[type] ?? (BASE_PROBABILITY / 10);
+  const fragility = (100 - stability) / 100;
+  const tension = revolutionRisk / 100;
+  return base * (1 + fragility * 1.5 + tension * 1.0);
 }
 
 // Catalogue des cygnes noirs possibles

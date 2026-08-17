@@ -208,23 +208,29 @@ body {
 }
 
 /* Respiration du globe central — le pays respire.
-   Cycle de 6s (10 cycles/min), amplitude subtile (±3%). */
-@keyframes sd-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-}
-.sd-breathe {
-  animation: sd-breathe 6s ease-in-out infinite;
-  transform-origin: center;
-}
+   Cycle de 6s (10 cycles/min), amplitude subtile (±3%).
+   NOTE: wrapped in @layer components because Tailwind v4 + Lightning CSS
+   were dropping these two blocks (sd-breathe, sd-view-in) and their
+   @keyframes from the compiled CSS during tree-shaking. Custom CSS inside
+   an explicit @layer is preserved verbatim. */
+@layer components {
+  @keyframes sd-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+  .sd-breathe {
+    animation: sd-breathe 6s ease-in-out infinite;
+    transform-origin: center;
+  }
 
-/* Apparition douce des vues lors du switch */
-@keyframes sd-view-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.sd-view-in {
-  animation: sd-view-in 0.35s ease-out;
+  /* Apparition douce des vues lors du switch */
+  @keyframes sd-view-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .sd-view-in {
+    animation: sd-view-in 0.35s ease-out;
+  }
 }
 
 @keyframes sd-draw {

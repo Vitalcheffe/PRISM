@@ -27,7 +27,6 @@ import { SimFooter } from "@/components/sim/SimFooter";
 import { IndicatorsReadout } from "@/components/sim/IndicatorsReadout";
 import { PoliticalPanel } from "@/components/sim/PoliticalPanel";
 import { GlobeView } from "@/components/sim/GlobeView";
-import { ForceGraph } from "@/components/sim/ForceGraph";
 import { NetworkView } from "@/components/sim/NetworkView";
 import { NeuralView } from "@/components/sim/NeuralView";
 import { TimelineView } from "@/components/sim/TimelineView";
@@ -72,7 +71,7 @@ export default function Home() {
           style={{ minHeight: 400 }}
         >
           <div key={view} className="sd-view-in flex-1 min-h-0 flex flex-col">
-          {view === "panneau" && <ForceGraph />}
+          {view === "panneau" && <GlobeView />}
           {view === "network" && <NetworkView />}
           {view === "neural" && <NeuralView />}
           {view === "timeline" && <TimelineView />}

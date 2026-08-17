@@ -39,7 +39,7 @@ export function SimHeader() {
   const pause = useSimulation((s) => s.pause);
   const resume = useSimulation((s) => s.resume);
   const reset = useSimulation((s) => s.reset);
-  const stability = useSimulation((s) => s.state.stability);
+  const stability = useSimulation((s) => s.state.indicators?.stability ?? 50);
   const revolutionRisk = useSimulation((s) => s.state.indicators?.revolution_risk ?? 0);
   const inflation = useSimulation((s) => s.state.indicators?.inflation ?? 0);
   const unemployment = useSimulation((s) => s.state.indicators?.unemployment ?? 0);

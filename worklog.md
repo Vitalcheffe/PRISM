@@ -449,3 +449,87 @@ Stage Summary:
 - Atmosphere: sd-breathe + sd-view-in animations added
 - README: Tests and validation section added before License
 - Ready for commit 12.
+
+---
+Task ID: D
+Agent: task-agent (backtest + NN real data + normalization)
+Task: Close three interdependent gaps from VALIDATION.md §5: (1) historical backtesting against real Morocco 2000-2023 data, (2) NN training on real time series instead of formulas, (3) NN normalization fix so input-layer weights carry real signal.
+
+Work Log:
+- Read mandatory first sources: worklog.md, neural-network.ts, formulas.ts, model.ts, VALIDATION.md.
+- Diagnosed the normalization root cause: at baseline, every normalized input is exactly 0 (inputMean = lever.baseline), so layer-0 weight gradients are 0 (gradWeights[i] += dz * input[i] = dz * 0 = 0). Layer-0 weights stay near He init (~0.21 std); the network encodes baseline signal in biases, not weights.
+- Gap 3 fix design — chose the "simplest" option from the spec (layer-specific LR) PLUS an inverted L2 ("bias decay") that achieves the user's stated goal:
+  - Added `TrainOpts` interface with `layerLRMultiplier` (default [1,1,1], Gap-3 default [3,1,1]).
+  - Added `biasDecay` parameter (L2 on biases ONLY — opposite of standard weight decay, forces the network to encode signal in weights rather than biases).
+  - Added optional `weightDecay` (standard L2 on weights) for completeness, default 0.
+  - Modified `train()` and `trainEpoch()` to accept optional `opts` parameter — fully backward-compatible (4-arg call unchanged).
+- Gap 2 implementation — added `preTrainOnRealData(network, epochs, opts)`:
+  - Hardcoded `MOROCCO_HISTORICAL` (6 data points: 2000, 2005, 2010, 2015, 2020, 2023) with real World Bank / IMF values for 6 indicators (gdp_growth, unemployment, inflation, debt_to_gdp, life_expectancy, hdi).
+  - Each year has `leverOverrides` (historical proxy) — selected from published sources where possible (interest_rate, minimum_wage, public_investment) and estimated otherwise (doctors_per_1k in 2000 ≈ 0.4 from WHO trend data).
+  - For each year: 6 real targets + 9 formula-derived targets (since WB/IMF doesn't publish all 15 indicators yearly).
+  - Default opts apply the Gap-3 fix: layerLRMultiplier=[3,1,1], biasDecay=0.001.
+  - Returns `{ beforeLoss, afterLoss, lossHistory, samples }`.
+  - Added `buildHistoricalSamples()` and `computeAverageLoss()` helpers.
+- Gap 3 verification — added `verifyLayer0WeightsMatter(network)`:
+  - Saves layer-0 weights, zeroes them, recomputes output, restores weights (non-mutating).
+  - Tests at baseline input (delta should be ~0 by design — normalized inputs are 0) AND at perturbed input (+25% of range above baseline).
+  - Returns `weightsMatter = perturbedMaxDelta > 1e-3`.
+- Gap 1 — built `validation/backtest.ts` (~580 lines):
+  - For each historical year: builds levers via `leverOverrides`, runs BOTH formulas (`computeAllIndicators(levers, prevGdp, accumulatedDebt)`) AND NN (`forward(net, leverValues)`).
+  - Computes per-indicator MAE (formulas vs NN), overall MAE, directional accuracy (year-over-year change direction, 5 transitions × 6 indicators = up to 30 comparisons).
+  - Also builds a "no-fix" NN for the Gap-3 comparison (same training but layerMult=[1,1,1], biasDecay=0).
+  - Generates BACKTEST.md with 8 sections: protocol, NN training, year-by-year table, MAE summary, directional accuracy, Gap-3 verification (with vs without fix), honest interpretation, reproducibility.
+- Added 41 new tests in `tests/backtest.test.ts` covering: MOROCCO_HISTORICAL data integrity, buildHistoricalSamples, computeAverageLoss, preTrainOnRealData (loss reduction, default opts, silent mode), verifyLayer0WeightsMatter (shape, non-mutation, baseline ~0, perturbed > threshold), train with TrainOpts (backward compat, layer LR effect, bias/weight decay), runBacktest end-to-end.
+- All 263 existing tests still pass (now 304 total: 263 + 41 new).
+
+Stage Summary:
+- Files:
+  - mini-services/simulation-engine/neural-network.ts (modified: +MOROCCO_HISTORICAL, +TrainOpts, +preTrainOnRealData, +buildHistoricalSamples, +computeAverageLoss, +verifyLayer0WeightsMatter, train/trainEpoch accept opts)
+  - mini-services/simulation-engine/validation/backtest.ts (new, ~580 lines, runBacktest + buildMarkdown + CLI main)
+  - mini-services/simulation-engine/tests/backtest.test.ts (new, 41 tests)
+  - /home/z/my-project/BACKTEST.md (new, ~12 KB, ~2430 words)
+- BACKTEST.md generated: yes (regenerable via `cd mini-services/simulation-engine && bun run validation/backtest.ts`)
+- Key findings:
+  - Gap 2: preTrainOnRealData reduces loss 0.195 → 0.0006 (318× reduction) over 500 epochs on the 6 real samples.
+  - Gap 1: Formula MAE is catastrophically high (24.5 overall, with gdp_growth MAE = 95.75 percentage points) because formulas have `MACRO_CONSTANTS.gdp_baseline_mrd_mad = 1400` baked in — they predict ~1300 Mrd MAD GDP for 2000 levers, vs actual ~360 Mrd MAD, producing fake 260% growth. This is a real calibration issue documented honestly in §7.1.
+  - Gap 1: NN MAE on the 6 historical points is 0.54 overall (in-sample fit — the NN trained on these exact 6 points, so this is a fit-quality diagnostic, not generalization).
+  - Gap 1: Directional accuracy — formulas get 53.6% (≈ random) of year-over-year change directions right; NN gets 100% (in-sample). The directional table in §5 shows the formula's blind spots (e.g., 2015→2020 COVID recession: formula predicts gdp_growth +, actual is −).
+  - Gap 3 verification: with fix, layer-0 weight max abs = 1.42 (vs 0.89 without fix, +60%); layer-0 weight std = 0.222 (vs 0.217 without, +0.005); perturbed max output delta when zeroing layer-0 = 1.21e4 (vs 6.14e2 without fix, 20× larger). `weightsMatter = true` confirmed.
+  - The honest interpretation in §7 explicitly notes the in-sample optimism of NN MAE, the proxy nature of lever values, and the formula "cheat" of being fed prevGdp + accumulatedDebt directly.
+- Tests: 304 pass (263 original + 41 new), 0 fail, 98648 expect() calls.
+- Engine smoke-tested: SimulationEngine constructor + step() still work; baseline indicators sensible (gdp=1504, unemployment=9.84%, inflation=1.84%, life_exp=73.4, hdi=0.74).
+
+---
+Task ID: 4+5
+Agent: frontend-atmosphere
+Task: Render GlobeView as the default view (Gap 5) and close the atmosphere gap between the live app and the docs visuals (Gap 4).
+
+Work Log:
+- Read worklog.md, src/app/page.tsx, src/components/sim/GlobeView.tsx (GlobeCenter around L437), src/components/sim/ForceGraph.tsx, src/app/globals.css, src/components/sim/GenerativeAudio.ts, src/components/sim/SimHeader.tsx, src/components/sim/GenesisModal.tsx, src/components/sim/ViewSwitcher.tsx, src/hooks/use-simulation.ts.
+- Found Gap 5: `page.tsx` line 75 was `view === "panneau" && <ForceGraph />` despite `GlobeView` being imported on line 29. ForceGraph was never actually used elsewhere — dead import.
+- Found Gap 4 root cause #1: Tailwind v4 + Lightning CSS were **silently dropping** the `@keyframes sd-breathe` + `.sd-breathe` and `@keyframes sd-view-in` + `.sd-view-in` blocks from the compiled CSS (confirmed by diffing `/tmp/compiled.css` — both blocks absent while structurally-identical siblings like `.sd-pulse-ink` and `.sd-gen-bar` survived). The classes were applied in the DOM but had no matching CSS, so the globe did not breathe and view-switch transitions did not animate.
+- Found Gap 4 root cause #2 (audio crash): clicking the Volume2/VolumeX button in SimHeader crashed the page with `TypeError: Failed to execute 'setTargetAtTime' on 'AudioParam': The provided float value is non-finite.` Stack trace pointed to `GenerativeAudio.ts:update()`. Root cause: SimHeader.tsx line 42 read `useSimulation((s) => s.state.stability)` — but `state.stability` is **not a field on SimState** (the TS error TS2339 "Property 'stability' does not exist on type 'SimState'" had been visible in `npx tsc --noEmit` for a while, but masked by the ForceGraph errors). `state.stability` returned `undefined`, so `stability / 100 = NaN`, `detuneAmount = NaN`, `osc.detune.setTargetAtTime(NaN, …)` threw, React's error boundary caught it, and the page showed "Application error: a client-side exception has occurred". This is why audio appeared "not wired" — the wiring was correct, but the underlying read crashed on first interaction.
+- Verified Gap 4 (GenesisModal + view transitions + audio wiring) was already structurally correct: page.tsx already had `<div key={view} className="sd-view-in …">`, GlobeView's GlobeCenter already had `<g className="sd-breathe">`, SimHeader already had `handleAudioToggle` wired to the button's `onClick`, GenesisModal already had `if (leversCount > 0) return null;` dismiss logic. The only missing piece for atmosphere was the missing CSS + the audio crash.
+
+Changes Made:
+1. **src/app/page.tsx** — Replaced `<ForceGraph />` with `<GlobeView />` for the `"panneau"` view (default). Removed the now-unused `import { ForceGraph }` line. GlobeView was already imported on line 29 — just needed to actually be rendered.
+2. **src/app/globals.css** — Wrapped the `@keyframes sd-breathe` + `.sd-breathe` and `@keyframes sd-view-in` + `.sd-view-in` declarations in an explicit `@layer components { … }` block. Tailwind v4 preserves custom CSS inside `@layer` verbatim (it only tree-shakes `@layer` rules when explicitly used as utilities, but for custom CSS it preserves them). Added a comment explaining the rationale so future editors don't move them back to the top level.
+3. **src/components/sim/SimHeader.tsx** — Changed line 42 from `useSimulation((s) => s.state.stability)` to `useSimulation((s) => s.state.indicators?.stability ?? 50)`. This matches GlobeView.tsx line 438's pattern and ensures the `audioUpdate(stability, …)` call receives a finite number, preventing the `setTargetAtTime(NaN)` TypeError crash.
+
+Verification (via agent-browser on http://localhost:81, the Caddy gateway that proxies socket.io to port 3003):
+- Schema loads: `Morocco · 47 levers · 15 indicators`, tick T1287. GenesisModal dismissed (`document.body.innerText.includes('CONNEXION AU MOTEUR')` = false).
+- GlobeView renders with the breathing globe: `.sd-breathe` count = 1, `svg circle` count = 11. Computed style on `.sd-breathe` element: `{animationName: "sd-breathe", animationDuration: "6s", animationIterationCount: "infinite"}` — the globe **is breathing**.
+- `.sd-view-in` count = 1, computed `animationName: "sd-view-in"`, `animationDuration: "0.35s"` — view transition is applied and animates. Verified that switching Network → Graph remounts the wrapper (because of `key={view}`) and the animation replays.
+- Audio toggle: clicked the VolumeX button → title flipped from "Activer l'audio (symphonie du chaos)" to "Couper l'audio" (Volume2 icon visible), page stayed mounted with **zero errors** captured by an injected `window.onerror` + `unhandledrejection` listener. Before the fix, the same click produced `TypeError: The provided float value is non-finite` and crashed the page.
+- TypeScript: `npx tsc --noEmit` reports zero errors in `src/app/page.tsx` and `src/components/sim/GlobeView.tsx` (the remaining errors in the project are pre-existing and unrelated: Prisma client not regenerated, Bun test imports, ForceGraph's own stale types — ForceGraph is no longer used).
+- Compiled CSS chunk grew from 137339 → 137745 bytes (+406 bytes for the now-preserved `sd-breathe` + `sd-view-in` rules). Confirmed both `@keyframes` and class selectors are present in the served CSS.
+
+Stage Summary:
+- Files:
+  - src/app/page.tsx (2 edits: swap `<ForceGraph/>` → `<GlobeView/>`; remove dead import)
+  - src/app/globals.css (1 edit: wrap 2 animation blocks in `@layer components`)
+  - src/components/sim/SimHeader.tsx (1 edit: fix `state.stability` → `state.indicators?.stability ?? 50`)
+- Visual identity preserved: amber #f59e0b untouched (not in these files), paper palette `--paper: #FAFAF7` / `--ink: #1A1A1A` untouched, SF Pro/Mono fonts untouched.
+- All other views still work: NetworkView, NeuralView, TimelineView, MetricsView, MethodologyView, KernelView, LifeView, GovernanceView all remain routed in page.tsx — only the `panneau` branch changed.
+- GlobeView (1071 lines) was NOT rewritten — only the routing in page.tsx changed.
+- Screenshot: /home/z/my-project/globe-final.png (1440×900, the live breathing globe).
