@@ -1,0 +1,48 @@
+name: Deploy Gallery to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Build gallery index
+        run: |
+          cat > docs/index.html << 'REDIRECT'
+          <!DOCTYPE html>
+          <html>
+          <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="refresh" content="0; url=gallery.html">
+          <title>PRISM — Visual System</title>
+          </head>
+          <body>
+          <p>Redirecting to <a href="gallery.html">gallery</a>…</p>
+          </body>
+          </html>
+          REDIRECT
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
