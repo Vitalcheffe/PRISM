@@ -15,6 +15,7 @@
 import * as React from "react";
 import { useSimulation, INDICATOR_SANE_RANGE } from "@/hooks/use-simulation";
 import { formatIndicatorValue, type Alert, type IndicatorState } from "@/lib/sim-types";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 function stateColor(state: IndicatorState): string {
   if (state === "critical") return "var(--state-crisis)";
@@ -61,10 +62,10 @@ function StabilityGauge() {
       </h3>
       <div className="flex items-baseline gap-1.5">
         <span
-          className="font-mono font-medium leading-none sd-value-trans"
+          className="font-mono font-medium leading-none"
           style={{ fontSize: 32, color: tone, letterSpacing: "-0.02em" }}
         >
-          {value.toFixed(0)}
+          <AnimatedNumber value={value ?? 0} decimals={0} />
         </span>
         <span className="font-mono text-[var(--ink-faint)]" style={{ fontSize: 11 }}>
           /100
@@ -110,10 +111,10 @@ function RevolutionRiskBar() {
           Risque d&apos;instabilité
         </h3>
         <span
-          className="font-mono sd-value-trans"
+          className="font-mono"
           style={{ fontSize: 11, color: tone, fontWeight: 500 }}
         >
-          {value.toFixed(1)}
+          <AnimatedNumber value={value ?? 0} decimals={1} />
         </span>
       </div>
       <div
