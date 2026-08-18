@@ -82,3 +82,7 @@ db/*.db
 mini-services/*/node_modules/.zscripts/
 tool-results/
 upload/
+video/PRISM_launch_film.mp4
+video/PRISM_launch_film.mp4
+video/audio/*.wav
+video/frames/
