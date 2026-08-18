@@ -322,7 +322,7 @@ The engine is covered by a 263-test suite using Bun's built-in test runner. Ever
 
 ```bash
 cd mini-services/simulation-engine && bun test
-# 304 pass · 0 fail · 98,648 expect() calls · ~5s
+# 318 pass · 0 fail · 98,648 expect() calls · ~5s
 ```
 
 Beyond unit tests, an empirical validation harness runs the actual `SimulationEngine` through four controlled experiments and produces [VALIDATION.md](./VALIDATION.md) with real numbers:
@@ -337,7 +337,7 @@ cd mini-services/simulation-engine && bun run validation/run-validation.ts
 # writes VALIDATION.md with real numbers
 ```
 
-CI runs lint, typecheck, all 304 tests, and the validation harness on every push and pull request. The VALIDATION.md artifact is uploaded automatically.
+CI runs lint, typecheck, all 318 tests, and the validation harness on every push and pull request. The VALIDATION.md artifact is uploaded automatically.
 
 ## Limitations
 

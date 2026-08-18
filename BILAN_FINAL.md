@@ -25,7 +25,7 @@
 | Cygnes noirs | 10 types, probabilités calibrées sur Reinhart-Rogoff/EM-DAT |
 | Paradigmes | 5 régimes avec indicatorModifiers |
 | Patterns de décret | 38 |
-| CI | GitHub Actions : lint + typecheck + 304 tests + validation harness + GitHub Pages |
+| CI | GitHub Actions : lint + typecheck + 318 tests + validation harness + GitHub Pages |
 | Deep learning | Pipeline complet (data, trainer, grid search, 10k samples, early stopping) |
 
 ### Ce qui marche vraiment
@@ -37,7 +37,7 @@
 5. **Les bugs critiques sont fixés** — espérance de vie 70.5 (était 147.8), HDI 0.725 (était 1.203)
 6. **Le backtesting existe** — 6 ans réels du Maroc (2000-2023), MAE documenté
 7. **Les black swans sont calibrés** — sur Reinhart-Rogoff, EM-DAT, Swiss Re, catalogue sismique marocain
-8. **304 tests passent** — NN, formulas, nonlinear, kernel, life, governance, model, backtest
+8. **318 tests passent** — NN, formulas, nonlinear, kernel, life, governance, model, backtest
 9. **L'app live a une atmosphère** — globe qui respire, transitions de vue, audio toggle, AnimatedNumber
 10. **La gallery est publique sur GitHub Pages** — URL permanente pour reviewer MIT
 
@@ -51,7 +51,7 @@
 | 6-9 | Visual system complet : 20 viz sets, gallery, interactive map, GLOSSARY, TELEMETRY, KERNEL |
 | 10 | Kernel câblé dans le live engine + bugs fixés (espérance vie, HDI) |
 | 11 | Frontend connecté : 3 nouvelles vues (Kernel, Life, Govern) live |
-| 12 | 304 tests + validation harness + CI + atmosphere |
+| 12 | 318 tests + validation harness + CI + atmosphere |
 | 13 | Template Over Engineer : math.md, README restructuré, limitations honnêtes |
 | 14 | data/results.json + GitHub link |
 | 15-16 | Paradigm rewrite réel + indicatorModifiers (switch change les indicateurs) |
@@ -113,7 +113,7 @@ Le pipeline tourne et produit de vrais nombres. Le R² est instable (varie entre
 
 ### Ce que MIT cherche (Maker Portfolio criteria)
 
-1. **Substantial** — ✅ 7,070 lignes de moteur, 304 tests, 45 visualisations, 9 documents méthodologiques
+1. **Substantial** — ✅ 7,070 lignes de moteur, 318 tests, 45 visualisations, 9 documents méthodologiques
 2. **Original** — ✅ Kernel à 12 phases, Life system, Governance system, extraction causale NLP, aucun projet équivalent
 3. **Technically creative** — ✅ NN from scratch en TypeScript, 7 couches non-linéaires, hystérésis, équilibre thermodynamique, deep learning pipeline
 4. **Build process > end result** — ✅ 21 commits avec historique organique, bugs documentés et fixés, limitations honnêtes

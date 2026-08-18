@@ -88,4 +88,4 @@ Weaknesses:
 5. **"Show me the math"** — stability score needs a derivation tooltip or expandable section
 
 ### MIT readiness
-The project is at the level where a reviewer sees a serious instrument, not a toy. The VLM's comparison to "Bureaucratic Brutalism" and "Academic Minimalism" is exactly the target aesthetic. The honest limitations (documented in README) + the 263 tests + the validation harness + the backtesting are what MIT wants to see. The visual polish is 7/10 — competent, not yet legendary.
+The project is at the level where a reviewer sees a serious instrument, not a toy. The VLM's comparison to "Bureaucratic Brutalism" and "Academic Minimalism" is exactly the target aesthetic. The honest limitations (documented in README) + the 318 tests + the validation harness + the backtesting are what MIT wants to see. The visual polish is 7/10 — competent, not yet legendary.

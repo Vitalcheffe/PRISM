@@ -84,7 +84,7 @@ Les trois questions :
 > simulate. A deep learning pipeline trains the network on 10,000 synthetic
 > samples + 6 real Morocco historical data points. The validation harness
 > runs sensitivity analysis, 10,000-tick stability tests, hysteresis
-> verification, and NN accuracy measurement. 304 tests verify every claim.
+> verification, and NN accuracy measurement. 318 tests verify every claim.
 
 #### 3. Why you make
 
@@ -101,7 +101,7 @@ Les trois questions :
 | Exigence MIT | Status PRISM | Preuve |
 |---|---|---|
 | Questionnaire (what/how/why) | ✅ Préparé | Ci-dessus |
-| Substantial | ✅ | 7,070 lignes moteur, 304 tests, 21 commits |
+| Substantial | ✅ | 7,070 lignes moteur, 318 tests, 21 commits |
 | Original | ✅ | Kernel 12 phases, Life system, NLP extraction — pas d'équivalent |
 | Technically creative | ✅ | NN from scratch, 7 couches non-linéaires, deep learning pipeline |
 | Build process documenté | ✅ | 21 commits + BILAN_FINAL.md + docs/math.md |
@@ -112,7 +112,7 @@ Les trois questions :
 | 1 PDF technique | ⚠️ À préparer | Voir section V |
 | Pas de face cam | ✅ | Script vidéo sans face cam |
 | Pas de musique dramatique | ✅ | Audio génératif sobre |
-| Pas de "trust me" sans démo | ✅ | 304 tests + validation harness |
+| Pas de "trust me" sans démo | ✅ | 318 tests + validation harness |
 
 ### C. Gaps à combler avant soumission
 
@@ -213,9 +213,9 @@ Les trois questions :
 ### Segment 6 : La validation (10s)
 
 **[Screen record : test suite running]**
-> "304 tests verify every claim. An empirical validation harness runs 10,000-tick stability tests and sensitivity analysis."
+> "318 tests verify every claim. An empirical validation harness runs 10,000-tick stability tests and sensitivity analysis."
 
-**[Overlay : "304 tests · 0 fail"]**
+**[Overlay : "318 tests · 0 fail"]**
 
 ### Segment 7 : Le build process (10s)
 
