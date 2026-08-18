@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1920px;height:1080px;background:#09090b;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+canvas{position:absolute;top:0;left:0;width:1920px;height:1080px}
+#overlay{position:absolute;top:0;left:0;width:1920px;height:1080px;pointer-events:none;z-index:10}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="1920" height="1080"></canvas>
+<div id="overlay"></div>
+<script>
+// PRISM Launch Film — WebGL renderer
+// 75 seconds @ 60fps = 4500 frames
+// Uses WebGL for bloom, particle systems, and shader-based effects
+
+const canvas = document.getElementById('canvas');
+const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+const overlay = document.getElementById('overlay');
+const W = 1920, H = 1080, FPS = 60, DUR = 75, TOTAL = FPS * DUR;
+
+// ── Shader sources ──
+const VS = `
+attribute vec2 a_position;
+varying vec2 v_uv;
+void main() {
+  v_uv = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}
+`;
+
+const FS_BG = `
+precision highp float;
+varying vec2 v_uv;
+uniform float u_time;
+uniform float u_phase; // 0=hook, 1=neural, 2=reactor, 3=swarm, 4=hysteresis, 5=emergence
+uniform float u_phaseT; // 0-1 within phase
+
+// Hash and noise functions
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash(i), b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+// FBM for film grain
+float fbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) {
+    v += a * noise(p);
+    p *= 2.0;
+    a *= 0.5;
+  }
+  return v;
+}
+
+void main() {
+  vec2 uv = v_uv;
+  vec3 color = vec3(0.035, 0.035, 0.043); // #09090b
+  
+  // Dot grid
+  vec2 grid = fract(uv * vec2(1920.0/40.0, 1080.0/40.0));
+  float dot = smoothstep(0.02, 0.0, length(grid - vec2(0.5)));
+  color += vec3(0.98, 0.62, 0.038) * dot * 0.025;
+  
+  // Radial glow center
+  vec2 center = vec2(0.5, 0.5);
+  float dist = length(uv - center);
+  float glow = 0.0;
+  
+  if (u_phase < 0.5) {
+    // Hook: pulsing glow
+    float pulse = 0.5 + 0.5 * sin(u_phaseT * 6.28 * 4.0);
+    glow = exp(-dist * 4.0) * 0.15 * (0.3 + pulse * 0.4);
+  } else if (u_phase < 2.5) {
+    // Neural/Reactor: medium glow
+    glow = exp(-dist * 3.0) * 0.08;
+  } else if (u_phase < 4.5) {
+    // Swarm/Hysteresis: subtle glow
+    glow = exp(-dist * 3.5) * 0.06;
+  } else {
+    // Emergence: strong glow
+    glow = exp(-dist * 2.5) * 0.12;
+  }
+  
+  color += vec3(0.98, 0.62, 0.038) * glow;
+  
+  // Film grain (fractal noise)
+  float grain = fbm(uv * 800.0 + u_time * 0.1);
+  color += vec3(grain) * 0.02;
+  
+  // Vignette
+  float vig = smoothstep(1.2, 0.4, dist);
+  color *= vig * 0.9 + 0.1;
+  
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+// ── Shader compilation ──
+function compileShader(src, type) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+function createProgram(vs, fs) {
+  const p = gl.createProgram();
+  gl.attachShader(p, compileShader(vs, gl.VERTEX_SHADER));
+  gl.attachShader(p, compileShader(fs, gl.FRAGMENT_SHADER));
+  gl.linkProgram(p);
+  return p;
+}
+
+const bgProgram = createProgram(VS, FS_BG);
+
+// Fullscreen quad
+const quadBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+// ── 2D Canvas overlay for particles, text, shapes ──
+const overlayCanvas = document.createElement('canvas');
+overlayCanvas.width = W; overlayCanvas.height = H;
+const octx = overlayCanvas.getContext('2d');
+
+// ── Colors ──
+const AMBER = '#f59e0b', CRIMSON = '#f43f5e', EMERALD = '#10b981';
+const VIOLET = '#a855f7', CYAN = '#06b6d4', INK = '#f0f6fc';
+const SOFT = '#8b949e', FAINT = '#3d444d';
+const CAT = [AMBER, CRIMSON, EMERALD, '#f97316', VIOLET, '#84cc16', '#eab308', CYAN];
+
+// ── Seeded RNG ──
+let seed = 1337;
+function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+function clamp(v,lo,hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a,b,t) { return a+(b-a)*t; }
+function eoc(t) { return 1-Math.pow(1-t,3); }
+function eob(t) { const c1=1.70158,c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2); }
+
+// ── Glow helper (canvas 2D) ──
+function glow(ctx, cx, cy, r, color, alpha) {
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, color);
+  g.addColorStop(1, 'transparent');
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = g;
+  ctx.fillRect(cx-r, cy-r, r*2, r*2);
+  ctx.globalAlpha = 1;
+}
+function mono(ctx, t, x, y, s, c, a) {
+  ctx.globalAlpha = a ?? 1; ctx.fillStyle = c ?? SOFT;
+  ctx.font = `400 ${s}px monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(t, x, y); ctx.globalAlpha = 1;
+}
+function big(ctx, t, x, y, s, c, w, a) {
+  ctx.globalAlpha = a ?? 1; ctx.fillStyle = c ?? INK;
+  ctx.font = `${w ?? 400} ${s}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(t, x, y); ctx.globalAlpha = 1;
+}
+
+// ── NN nodes ──
+const nnLayers = [47,32,32,15];
+const nnLX = [W*0.2, W*0.4, W*0.6, W*0.8];
+const nnNodes = [];
+for (let l = 0; l < 4; l++) {
+  const c = nnLayers[l], sp = (H*0.7)/(c+1);
+  for (let i = 0; i < c; i++)
+    nnNodes.push({x:nnLX[l], y:H*0.15+sp*(i+1), layer:l, idx:i, color:l===0?CAT[i%8]:l===3?CAT[i%8]:AMBER});
+}
+const nnConns = [];
+for (let i=0;i<47;i++) for (let j=0;j<32;j++) if (rnd()<0.1) nnConns.push([i,47+j]);
+for (let i=0;i<32;i++) for (let j=0;j<32;j++) if (rnd()<0.1) nnConns.push([47+i,79+j]);
+for (let i=0;i<32;i++) for (let j=0;j<15;j++) if (rnd()<0.15) nnConns.push([79+i,111+j]);
+
+// ── Prisms ──
+const prisms = [];
+for (let i = 0; i < 47; i++) prisms.push({x: W*0.1+(i+1)*(W*0.8/48), h: 30+rnd()*180, color: CAT[i%8]});
+
+// ── Swarm ──
+const swarm = [];
+const sBlk=180, sGap=50, sC=4, sR=2;
+const sX=(W-(sC*sBlk+(sC-1)*sGap))/2, sY=H*0.22;
+for (let r=0;r<sR;r++) for (let c=0;c<sC;c++) {
+  const bx=sX+c*(sBlk+sGap), by=sY+r*(sBlk+sGap), cat=r*sC+c, hot=cat===4||cat===5;
+  for (let i=0;i<50;i++) {
+    const px=bx+rnd()*sBlk, py=by+rnd()*sBlk;
+    const st=hot&&rnd()<0.5?0.7+rnd()*0.3:rnd()*0.3;
+    swarm.push({x:px, y:py, color:CAT[cat], stress:st});
+  }
+}
+
+// ── Wave field ──
+const waves = [];
+const wC=60, wR=25, wS=28;
+const wX=(W-wC*wS)/2, wY=(H-wR*wS)/2;
+for (let r=0;r<wR;r++) for (let c=0;c<wC;c++) waves.push({x:wX+c*wS, y:wY+r*wS});
+
+// ── Hysteresis chart ──
+const hystPts = [];
+for (let i=0;i<=100;i++) {
+  const px=W/2-400+(i/100)*800, pr=i/100;
+  let py;
+  if (pr<0.15) py=H/2+30+125-125*0.2;
+  else if (pr<0.4) py=H/2+30+125-125*0.2-(pr-0.15)/0.25*125*0.6;
+  else py=H/2+30+125-125*0.8+(pr-0.4)/0.6*125*0.6;
+  hystPts.push({x:px, y:py});
+}
+
+// ── FRAME RENDERER ──
+// Segments: 1(0-8), 2(8-22), 3(22-38), 4(38-50), 5(50-62), 6(62-75)
+function renderFrame(frame) {
+  const ts = frame / FPS;
+  let phase = 0, phaseT = 0;
+  if (ts < 8) { phase = 0; phaseT = ts/8; }
+  else if (ts < 22) { phase = 1; phaseT = (ts-8)/14; }
+  else if (ts < 38) { phase = 2; phaseT = (ts-22)/16; }
+  else if (ts < 50) { phase = 3; phaseT = (ts-38)/12; }
+  else if (ts < 62) { phase = 4; phaseT = (ts-50)/12; }
+  else { phase = 5; phaseT = (ts-62)/13; }
+
+  // ── WebGL background ──
+  gl.useProgram(bgProgram);
+  const posLoc = gl.getAttribLocation(bgProgram, 'a_position');
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform1f(gl.getUniformLocation(bgProgram, 'u_time'), ts);
+  gl.uniform1f(gl.getUniformLocation(bgProgram, 'u_phase'), phase);
+  gl.uniform1f(gl.getUniformLocation(bgProgram, 'u_phaseT'), phaseT);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  // ── Canvas 2D overlay ──
+  octx.clearRect(0, 0, W, H);
+
+  if (phase === 0) {
+    // HOOK
+    const t = phaseT;
+    if (t < 0.2) {
+      const f = t/0.2;
+      glow(octx, W/2, H/2, 200, AMBER, 0.02*f);
+    } else if (t < 0.5) {
+      const p = 0.5+0.5*Math.sin(t*Math.PI*8);
+      glow(octx, W/2, H/2, 300, AMBER, 0.06+p*0.03);
+      octx.fillStyle = AMBER;
+      octx.beginPath(); octx.arc(W/2, H/2, 6+p*4, 0, Math.PI*2); octx.fill();
+    } else {
+      const e = eoc((t-0.5)/0.5);
+      glow(octx, W/2, H/2, 400, AMBER, 0.05);
+      octx.strokeStyle = AMBER; octx.lineWidth = 1; octx.globalAlpha = 0.4*(1-e);
+      octx.beginPath(); octx.arc(W/2, H/2, 8+e*100, 0, Math.PI*2); octx.stroke(); octx.globalAlpha = 1;
+      octx.fillStyle = AMBER;
+      octx.beginPath(); octx.arc(W/2, H/2, 5, 0, Math.PI*2); octx.fill();
+      if (t > 0.6) { const a = clamp((t-0.6)/0.15, 0, 1); big(octx, "PRISM", W/2, H/2-70, 88, INK, "700", a); }
+      if (t > 0.75) { const a = clamp((t-0.75)/0.15, 0, 1); mono(octx, "NON-LINEAR MACROECONOMIC SIMULATOR", W/2, H/2+40, 12, SOFT, a); }
+    }
+  } else if (phase === 1) {
+    // NEURAL NETWORK
+    const t = phaseT;
+    glow(octx, W/2, H/2, 500, AMBER, 0.025);
+    mono(octx, "THE NEURAL NETWORK", W/2, 55, 13, FAINT, 1);
+    mono(octx, "47 → 32 → 32 → 15 · 3,008 WEIGHTS", W/2, 82, 11, FAINT, 1);
+    octx.strokeStyle = AMBER; octx.lineWidth = 0.5;
+    for (const [a,b] of nnConns) {
+      const n1 = nnNodes[a], n2 = nnNodes[b];
+      octx.globalAlpha = 0.02;
+      octx.beginPath(); octx.moveTo(n1.x, n1.y); octx.lineTo(n2.x, n2.y); octx.stroke();
+    }
+    octx.globalAlpha = 1;
+    for (let s=0; s<4; s++) {
+      const si = Math.floor((t*47+s*11)%47), mi = Math.floor((t*32+s*7)%32), oi = Math.floor((t*15+s*3)%15);
+      const n1 = nnNodes[si], n2 = nnNodes[47+mi], n3 = nnNodes[79+mi], n4 = nnNodes[111+oi];
+      octx.strokeStyle = AMBER; octx.lineWidth = 1.5; octx.globalAlpha = 0.5;
+      octx.beginPath(); octx.moveTo(n1.x, n1.y); octx.lineTo(n2.x, n2.y);
+      octx.lineTo(n3.x, n3.y); octx.lineTo(n4.x, n4.y); octx.stroke();
+      octx.globalAlpha = 1; glow(octx, n4.x, n4.y, 15, n4.color, 0.2);
+    }
+    for (const n of nnNodes) {
+      const r = n.layer===0?3:n.layer===3?5:4;
+      const p = 0.5+0.5*Math.sin(ts*3+n.idx*0.1);
+      octx.fillStyle = n.color; octx.globalAlpha = 0.4+p*0.4;
+      octx.beginPath(); octx.arc(n.x, n.y, r, 0, Math.PI*2); octx.fill();
+    }
+    octx.globalAlpha = 1;
+    const lbs = ["INPUT (47)","HIDDEN-1 (32)","HIDDEN-2 (32)","OUTPUT (15)"];
+    for (let i=0; i<4; i++) mono(octx, lbs[i], nnLX[i], H-45, 9, FAINT, 1);
+  } else if (phase === 2) {
+    // REACTOR
+    const t = phaseT;
+    glow(octx, W/2, H/2, 500, AMBER, 0.025);
+    mono(octx, "THE REACTOR", W/2, 55, 13, FAINT, 1);
+    mono(octx, "47 POLICY LEVERS · LIVE PERTURBATION", W/2, 82, 11, FAINT, 1);
+    const blY = H*0.8;
+    octx.strokeStyle = "rgba(255,255,255,0.05)"; octx.lineWidth = 1;
+    octx.beginPath(); octx.moveTo(W*0.08, blY); octx.lineTo(W*0.92, blY); octx.stroke();
+    for (let i=0; i<prisms.length; i++) {
+      const p = prisms[i];
+      const ap = clamp(t*3-i*0.02, 0, 1);
+      const h = lerp(0, p.h, eob(ap)) + Math.sin(ts*4+i*0.5)*12;
+      const w = 14;
+      octx.fillStyle = p.color; octx.globalAlpha = 0.5;
+      octx.fillRect(p.x-w/2, blY-h, w, h);
+      octx.globalAlpha = 1; octx.fillRect(p.x-w/2, blY-h, w, 2);
+      if (i%7 === Math.floor(ts*8)%7) glow(octx, p.x, blY-h, 20, p.color, 0.12);
+    }
+    octx.globalAlpha = 1;
+  } else if (phase === 3) {
+    // AGENT SWARM
+    mono(octx, "THE AGENT SWARM", W/2, 55, 13, FAINT, 1);
+    mono(octx, "10,000 AGENTS · 8 FACTIONS · REAL REACTIONS", W/2, 82, 11, FAINT, 1);
+    for (const d of swarm) {
+      const ps = d.stress + 0.1*Math.sin(ts*5+d.x*0.01);
+      const a = clamp(0.2+ps*0.6, 0, 1), sz = 2+ps*1.5;
+      octx.fillStyle = d.color; octx.globalAlpha = a;
+      octx.fillRect(d.x, d.y, sz, sz);
+      if (d.stress > 0.7) glow(octx, d.x, d.y, 6, d.color, 0.15);
+    }
+    octx.globalAlpha = 1;
+    const lbs = ["LABOR","EMPLOYERS","MILITARY","CLERGY","YOUTH","RURAL","URBAN","INFORMAL"];
+    for (let r=0; r<2; r++) for (let c=0; c<4; c++)
+      mono(octx, lbs[r*4+c], sX+c*(sBlk+sGap)+sBlk/2, sY+r*(sBlk+sGap)-12, 9, CAT[r*4+c], 1);
+  } else if (phase === 4) {
+    // HYSTERESIS
+    const t = phaseT;
+    glow(octx, W/2, H/2, 400, CRIMSON, 0.015);
+    mono(octx, "HYSTERESIS — THE SCAR", W/2, 55, 13, FAINT, 1);
+    mono(octx, "RECOVERY DOESN'T ERASE THE SCAR", W/2, 82, 11, FAINT, 1);
+    const cx=W/2, cy=H/2+30, pw=800, ph=250;
+    octx.strokeStyle = "rgba(255,255,255,0.06)"; octx.lineWidth = 1;
+    octx.beginPath(); octx.moveTo(cx-pw/2, cy+ph/2); octx.lineTo(cx+pw/2, cy+ph/2); octx.stroke();
+    octx.beginPath(); octx.moveTo(cx-pw/2, cy-ph/2); octx.lineTo(cx-pw/2, cy+ph/2); octx.stroke();
+    const crisisX = cx-pw/2+pw*0.15, recX = cx-pw/2+pw*0.4;
+    octx.strokeStyle = "rgba(244,63,94,0.2)"; octx.setLineDash([2,6]);
+    octx.beginPath(); octx.moveTo(crisisX, cy-ph/2); octx.lineTo(crisisX, cy+ph/2); octx.stroke();
+    octx.beginPath(); octx.moveTo(recX, cy-ph/2); octx.lineTo(recX, cy+ph/2); octx.stroke();
+    octx.setLineDash([]);
+    mono(octx, "CRISIS", crisisX, cy-ph/2-15, 9, CRIMSON, 1);
+    mono(octx, "RECOVERY", recX, cy-ph/2-15, 9, SOFT, 1);
+    octx.strokeStyle = "rgba(139,144,154,0.25)"; octx.lineWidth = 1; octx.setLineDash([4,4]);
+    octx.beginPath();
+    for (let i=0; i<hystPts.length; i++) {
+      i===0 ? octx.moveTo(hystPts[i].x, hystPts[i].y) : octx.lineTo(hystPts[i].x, hystPts[i].y);
+    }
+    octx.stroke(); octx.setLineDash([]);
+    const dn = Math.floor(hystPts.length * clamp(t*1.3, 0, 1));
+    if (dn > 40) {
+      octx.fillStyle = "rgba(245,158,11,0.06)"; octx.beginPath();
+      for (let i=40; i<dn; i++) i===40 ? octx.moveTo(hystPts[i].x, hystPts[i].y) : octx.lineTo(hystPts[i].x, hystPts[i].y);
+      for (let i=dn-1; i>=40; i--) octx.lineTo(hystPts[i].x, hystPts[i].y+50);
+      octx.closePath(); octx.fill();
+    }
+    octx.strokeStyle = AMBER; octx.lineWidth = 2; octx.beginPath();
+    for (let i=0; i<dn; i++) {
+      const y = i>40 ? hystPts[i].y+50 : hystPts[i].y;
+      i===0 ? octx.moveTo(hystPts[i].x, y) : octx.lineTo(hystPts[i].x, y);
+    }
+    octx.stroke();
+    if (dn > 60) mono(octx, "THE SCAR · +5.0pp", cx+pw*0.15, cy-ph*0.05, 11, AMBER, 1);
+    if (t > 0.5) mono(octx, "the system remembers", cx, cy+ph/2+35, 11, SOFT, clamp((t-0.5)*2, 0, 1));
+  } else {
+    // EMERGENCE
+    const t = phaseT;
+    glow(octx, W/2, H/2, 600, AMBER, 0.035);
+    mono(octx, "EMERGENCE", W/2, 55, 13, FAINT, 1);
+    for (const d of waves) {
+      const off = Math.sin(d.x*0.005+ts*4)*20 + Math.sin(d.x*0.01+ts*5.3)*15 + Math.cos(d.y*0.008+ts*3)*10;
+      const y = d.y + off, amp = Math.abs(off)/45;
+      octx.fillStyle = AMBER; octx.globalAlpha = 0.2 + amp*0.6;
+      octx.fillRect(d.x-1, y-1, 2+amp*1.5, 2+amp*1.5);
+    }
+    octx.globalAlpha = 1;
+    if (t > 0.3) {
+      const a = clamp((t-0.3)/0.2, 0, 1);
+      big(octx, "Life is not simulated.", W/2, H/2-80, 26, INK, "300", a);
+      big(octx, "It emerges.", W/2, H/2-40, 26, AMBER, "400", a);
+    }
+    if (t > 0.6) {
+      const a = clamp((t-0.6)/0.2, 0, 1);
+      big(octx, "PRISM", W/2, H/2+50, 44, INK, "700", a);
+      mono(octx, "github.com/Vitalcheffe/PRISM", W/2, H/2+95, 12, SOFT, a);
+    }
+  }
+
+  // Progress bar
+  octx.fillStyle = "rgba(245,158,11,0.1)";
+  octx.fillRect(0, H-2, W*(frame/TOTAL), 2);
+
+  // Composite overlay onto WebGL canvas
+  // Read WebGL pixels, draw overlay, write back
+  const webglCanvas = canvas;
+  const tmpCtx = webglCanvas.getContext('2d');
+  // Actually we need to composite — use a separate visible canvas
+  // For now, draw overlay directly using the overlay div approach
+  // We'll use a second canvas on top
+  return overlayCanvas.toDataURL('image/png');
+}
+
+// Expose for agent-browser
+window.__renderFrame = function(frame) {
+  renderFrame(frame);
+  // Composite: draw WebGL background to overlay, then read
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = W; finalCanvas.height = H;
+  const fctx = finalCanvas.getContext('2d');
+  // Draw WebGL canvas
+  fctx.drawImage(canvas, 0, 0, W, H);
+  // Draw overlay
+  fctx.drawImage(overlayCanvas, 0, 0);
+  return finalCanvas.toDataURL('image/png');
+};
+
+console.log('PRISM WebGL renderer ready. Call window.__renderFrame(frame)');
+</script>
+</body>
+</html>
