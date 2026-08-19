@@ -75,7 +75,7 @@ The MIT Maker Portfolio evaluates three official criteria plus one non-official 
 ### Criterion 4 — Build process > end result ✅ PASS (strong, but the worklog breaks at commit 21)
 
 **Evidence:**
-- **24 commits with organic history** — each commit message describes a real unit of work (`fix: wire Kernel into live engine, fix impossible indicator values`, `feat: close all 6 remaining gaps — backtesting, real-data NN, atmosphere, calibration`). No squash. The history reads like an engineer thinking out loud.
+- **33 commits with organic history** — each commit message describes a real unit of work (`fix: wire Kernel into live engine, fix impossible indicator values`, `feat: close all 6 remaining gaps — backtesting, real-data NN, atmosphere, calibration`). No squash. The history reads like an engineer thinking out loud.
 - **Bugs found and fixed, documented:** life expectancy 147.8 → 70.5; HDI 1.203 → 0.725; population explosion fixed by memory-leak regression test; bankruptcy cascade triggers at tick 945–1700 (real calibration finding, not hidden).
 - **7 honest limitations** in the README, including the painful one ("The neural network generalizes poorly out-of-distribution. Median R² is ~0.8 for lever values near the baseline, but drops below 0 for extreme values").
 - **VALIDATION.md** reports 6/7 stability checks pass and explicitly names the one that fails (bankruptcy cascade) as "a real model calibration issue worth noting, not a bug".
@@ -116,7 +116,7 @@ The MIT Maker Portfolio evaluates three official criteria plus one non-official 
 | 21 | Telemetry contract | `docs/TELEMETRY.md` | ✅ 1,441 words | ✅ | Observable signals + tick budget. |
 | 22 | Kernel spec | `docs/KERNEL.md` | ✅ 2,332 words | ✅ | 12-phase lifecycle, subsystems, syscalls. |
 | 23 | Test report | `TEST_REPORT.md` | ✅ 657 words | ✅ | VLM + E2E 10/10. |
-| 24 | Bilan A→Z | `BILAN_FINAL.md` | ✅ 1,333 words | ⚠️ | Strong but contains stale numbers (21 commits, 318 tests). Update before submission. |
+| 24 | Bilan A→Z | `BILAN_FINAL.md` | ✅ 1,333 words | ⚠️ | Strong but contains stale numbers (33 commits, 318 tests). Update before submission. |
 | 25 | GitHub repo | `github.com/Vitalcheffe/PRISM` | ✅ remote configured | ⚠️ unverifiable public status | Local `origin` matches; local branch is in sync with `origin/main` (verified). Cannot verify from this sandbox whether the repo is set to PUBLIC on GitHub.com. **Verify manually in browser.** |
 
 **Attachment scorecard: 22 / 25 exist. 2 critical blockers (video, PDF). 1 needs manual verification (repo visibility). 3 need quality improvements (banner, emergence, paradigm-shift caption).**
@@ -141,7 +141,7 @@ The script is in `MIT_MAKER_PORTFOLIO.md` §IV. Seven segments, 120 seconds tota
 
 2. **⚠️ Stale "318 tests" overlay (Segment 6).** Actual is 339. Minor, but again, MIT will run the tests.
 
-3. **⚠️ Stale "21 commits" voiceover (Segment 7).** Actual is 24. Same issue.
+3. **⚠️ Stale "33 commits" voiceover (Segment 7).** Actual is 24. Same issue.
 
 4. **⚠️ Build process gets only 10 seconds out of 120.** MIT's #1 criterion is *"We are more interested in your build process than your end results."* The script gives the build process (Segment 7) the smallest slice — 10s of git log scrolling. That's a structural mistake. Rebalance: the build process should be at least 20–25 seconds, ideally including the bug-fix montage (life expectancy 147.8 → 70.5, HDI 1.203 → 0.725, the Gap-3 diagnosis).
 
@@ -173,7 +173,7 @@ This rebalances to put **20s on build process** (up from 10s), adds the decree w
 
 2. **Compile the technical PDF.** All five source files exist (RESEARCH.md 13,491 words, docs/math.md 1,664, VALIDATION.md 7,281, BACKTEST.md 2,429, TRAINING_REPORT.md 561). Run the pandoc command in MIT_MAKER_PORTFOLIO.md §V. Add a cover page with the title, author, and date. Add a table of contents. This is a 30-minute task and converts 25,000 words of existing material into the single required PDF.
 
-3. **Update every stale number.** Specifically: 7 occurrences of "21 commits" → "24 commits" (BILAN_FINAL.md ×4, MIT_MAKER_PORTFOLIO.md ×3); README's "318 tests" → "318 tests"; BILAN_FINAL.md's "318 tests" → "318 tests"; MIT_MAKER_PORTFOLIO.md's "318 tests" → "318 tests"; BILAN_FINAL.md's "7,070 lignes moteur" → "7,521 lignes moteur"; video script's "318 tests" overlay → "318 tests". A reviewer who runs `bun test` and sees 339 will distrust every claim in the README if it still says 263.
+3. **Update every stale number.** Specifically: 7 occurrences of "33 commits" → "33 commits" (BILAN_FINAL.md ×4, MIT_MAKER_PORTFOLIO.md ×3); README's "318 tests" → "318 tests"; BILAN_FINAL.md's "318 tests" → "318 tests"; MIT_MAKER_PORTFOLIO.md's "318 tests" → "318 tests"; BILAN_FINAL.md's "7,070 lignes moteur" → "7,521 lignes moteur"; video script's "318 tests" overlay → "318 tests". A reviewer who runs `bun test` and sees 339 will distrust every claim in the README if it still says 263.
 
 4. **Append the missing worklog entries.** Three commits (deep learning pipeline, VLM/E2E report, MIT Maker Portfolio doc) are not in `worklog.md`. The worklog is the single most MIT-relevant artifact — it's the literal "build process" document. Append 3 entries following the existing format (Task ID, Agent, Task, Work Log, Stage Summary, Files). This is a 15-minute task.
 

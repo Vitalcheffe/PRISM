@@ -58,11 +58,11 @@ const crisisX=cx-pw/2+pw*0.15,recX=cx-pw/2+pw*0.4;ctx.strokeStyle="rgba(244,63,9
 ctx.beginPath();ctx.moveTo(crisisX,cy-ph/2);ctx.lineTo(crisisX,cy+ph/2);ctx.stroke();ctx.beginPath();ctx.moveTo(recX,cy-ph/2);ctx.lineTo(recX,cy+ph/2);ctx.stroke();ctx.setLineDash([]);
 mono("CRISIS",crisisX,cy-ph/2-15,9,CRIMSON,1);mono("RECOVERY",recX,cy-ph/2-15,9,SOFT,1);
 ctx.strokeStyle="rgba(139,144,154,0.25)";ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();
-for(let i=0;i<hystPts.length;i++)i===0?ctx.moveTo(hystPts[i].x,hystPts[i].y):ctx.lineTo(hystPts[i].x,hystPts[i].y);ctx.stroke();ctx.setLineDash([]);
+for(let i=0;i<hystPts.length;i++){if(i===0){ctx.moveTo(hystPts[i].x,hystPts[i].y)}else{ctx.lineTo(hystPts[i].x,hystPts[i].y)}}ctx.stroke();ctx.setLineDash([]);
 const dn=Math.floor(hystPts.length*clamp(t*1.3,0,1));if(dn>40){ctx.fillStyle="rgba(245,158,11,0.06)";ctx.beginPath();
-for(let i=40;i<dn;i++)i===40?ctx.moveTo(hystPts[i].x,hystPts[i].y):ctx.lineTo(hystPts[i].x,hystPts[i].y);
+for(let i=40;i<dn;i++){if(i===40){ctx.moveTo(hystPts[i].x,hystPts[i].y)}else{ctx.lineTo(hystPts[i].x,hystPts[i].y)}}
 for(let i=dn-1;i>=40;i--)ctx.lineTo(hystPts[i].x,hystPts[i].y+50);ctx.closePath();ctx.fill();}
-ctx.strokeStyle=AMBER;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<dn;i++){const y=i>40?hystPts[i].y+50:hystPts[i].y;i===0?ctx.moveTo(hystPts[i].x,y):ctx.lineTo(hystPts[i].x,y);}ctx.stroke();
+ctx.strokeStyle=AMBER;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<dn;i++){const y=i>40?hystPts[i].y+50:hystPts[i].y;if(i===0){ctx.moveTo(hystPts[i].x,y)}else{ctx.lineTo(hystPts[i].x,y)}}ctx.stroke();
 if(dn>60)mono("THE SCAR · +5.0pp",cx+pw*0.15,cy-ph*0.05,11,AMBER,1);if(t>0.5)mono("the system remembers",cx,cy+ph/2+35,11,SOFT,clamp((t-0.5)*2,0,1));}
 else{const t=(ts-62)/13;glow(W/2,H/2,600,AMBER,0.035);mono("EMERGENCE",W/2,55,13,FAINT,1);
 for(const d of waves){const off=Math.sin(d.x*0.005+ts*4)*20+Math.sin(d.x*0.01+ts*5.3)*15+Math.cos(d.y*0.008+ts*3)*10;

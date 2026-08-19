@@ -101,10 +101,10 @@ Les trois questions :
 | Exigence MIT | Status PRISM | Preuve |
 |---|---|---|
 | Questionnaire (what/how/why) | ✅ Préparé | Ci-dessus |
-| Substantial | ✅ | 7,070 lignes moteur, 318 tests, 21 commits |
+| Substantial | ✅ | 7,070 lignes moteur, 318 tests, 33 commits |
 | Original | ✅ | Kernel 12 phases, Life system, NLP extraction — pas d'équivalent |
 | Technically creative | ✅ | NN from scratch, 7 couches non-linéaires, deep learning pipeline |
-| Build process documenté | ✅ | 21 commits + BILAN_FINAL.md + docs/math.md |
+| Build process documenté | ✅ | 33 commits + BILAN_FINAL.md + docs/math.md |
 | Codebase version-contrôlée | ✅ | GitHub public (Vitalcheffe/PRISM) |
 | Démo fonctionnelle | ✅ | App live + gallery GitHub Pages |
 | Max 25 médias | ⚠️ À préparer | Voir section III |
@@ -220,7 +220,7 @@ Les trois questions :
 ### Segment 7 : Le build process (10s)
 
 **[Screen record : git log scrolling]**
-> "21 commits over the development. The build process is documented. The limitations are honest."
+> "33 commits over the development. The build process is documented. The limitations are honest."
 
 **[Overlay : "build process > end result"]**
 

@@ -1,13 +1,13 @@
 # PRISM — Bilan Final A→Z
 
-> Document vivant. État réel du projet après 21 commits. Honnête, complet,
+> Document vivant. État réel du projet après 33 commits. Honnête, complet,
 > sans limites. Pour MIT.
 
 ---
 
 ## I. Ce que PRISM est, réellement
 
-### Les chiffres audités (21 commits)
+### Les chiffres audités (33 commits)
 
 | Métrique | Valeur |
 |---|---|
@@ -15,7 +15,7 @@
 | Modules moteur | 15 fichiers, 7,070 lignes TypeScript |
 | Composants frontend | 22 fichiers, 6,558 lignes TSX |
 | Documents | 9 (RESEARCH 1298, NOTES 417, README, BILAN, GLOSSARY 355, TELEMETRY 256, KERNEL 438, math 374, BACKTEST 278, VALIDATION 588, TRAINING 89, TEST_REPORT 91) |
-| Tests | 304 (263 engine + 41 backtest) — tous passent |
+| Tests | 318 (304 engine + 41 backtest) — tous passent |
 | Visualisations | 45 HTML + 45 PNG (20 viz sets dark/light + architecture + gallery + interactive map) |
 | Levers | 47 (réels, sourcés World Bank / Loi de Finances / BAM / IMF / UN PAGE) |
 | Indicateurs | 15 (GDP, chômage, inflation, dette, HDI, Gini, etc.) |
@@ -83,7 +83,7 @@ Le pipeline tourne et produit de vrais nombres. Le R² est instable (varie entre
 
 ---
 
-## IV. Les tests — 304, tous passent
+## IV. Les tests — 318, tous passent
 
 | Fichier | Tests | Couvre |
 |---|---|---|
@@ -95,7 +95,7 @@ Le pipeline tourne et produit de vrais nombres. Le R² est instable (varie entre
 | governance.test.ts | 31 | 8 ministères, reallocation |
 | kernel.test.ts | 41 | 12 phases, syscalls, stabilité 1000 cycles |
 | backtest.test.ts | 41 | backtesting, NN accuracy |
-| **Total** | **304** | **0 fail** |
+| **Total** | **318** | **0 fail** |
 
 ---
 
@@ -116,7 +116,7 @@ Le pipeline tourne et produit de vrais nombres. Le R² est instable (varie entre
 1. **Substantial** — ✅ 7,070 lignes de moteur, 318 tests, 45 visualisations, 9 documents méthodologiques
 2. **Original** — ✅ Kernel à 12 phases, Life system, Governance system, extraction causale NLP, aucun projet équivalent
 3. **Technically creative** — ✅ NN from scratch en TypeScript, 7 couches non-linéaires, hystérésis, équilibre thermodynamique, deep learning pipeline
-4. **Build process > end result** — ✅ 21 commits avec historique organique, bugs documentés et fixés, limitations honnêtes
+4. **Build process > end result** — ✅ 33 commits avec historique organique, bugs documentés et fixés, limitations honnêtes
 
 ### Ce que le reviewer voit
 
@@ -140,4 +140,4 @@ PRISM est au niveau "instrument de recherche sérieux". Pas un toy, pas un proto
 
 PRISM devient une fondation open-source. Le Kernel devient un standard. D'autres pays sont ajoutés. Le NN s'entraîne sur des vraies séries temporelles annuelles. L'extraction causale lit 10,000 rapports. L'émergence devient une science. Et le créateur, dix ans plus tard, voit son enfance — "un petit jeu de simulation de pays" — devenue un instrument qui aide de vraies personnes à prendre de vraies décisions.
 
-21 commits. Rien squashé. Le projet est prêt.
+33 commits. Rien squashé. Le projet est prêt.

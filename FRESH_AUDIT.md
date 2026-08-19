@@ -29,7 +29,7 @@ violate MIT's explicit criteria:
    `3750d8b6-87dc-4b28-964b-5ef1a0b1c1fd`,
    `75ea5c1b-e485-435b-8703-677846732226`). MIT explicitly values *"build
    process > end result"* — these commits look programmatic, not authored.
-3. **Stale counts everywhere.** README says `263 tests`, the tests section
+3. **Stale counts everywhere.** README says `318 tests`, the tests section
    says `304 pass`, `MIT_MAKER_PORTFOLIO.md` says `304 tests`, the prior
    `FINAL_AUDIT.md` says `339 tests`, the actual count is **341** (339
    non-skipped). No two documents agree.
@@ -122,7 +122,7 @@ exists.
 ### What the docs claim
 
 - `README.md` §Tests: *"304 pass · 0 fail · 98,648 expect() calls · ~5s"*
-- `README.md` §How it works: *"a 263-test suite verifies every claim"*
+- `README.md` §How it works: *"a 318-test suite verifies every claim"*
 - `MIT_MAKER_PORTFOLIO.md`: *"304 tests verify every claim"*
 - Pre-existing `FINAL_AUDIT.md`: *"339 actual tests"*
 
@@ -279,7 +279,7 @@ epochs")` will reasonably ask: *if the loss does not reduce, is the
 
 ### Criterion 4 — Build process > end result ❌ FAIL on three commits
 
-29 commits total. 26 have proper `feat:` / `fix:` / `docs:` messages
+33 commits total. 26 have proper `feat:` / `fix:` / `docs:` messages
 describing real units of work. Three commits have **only a UUID as the
 message**:
 
@@ -423,7 +423,7 @@ The fix list, in priority order:
    are genuinely automated (CI artifacts?), move them to a separate
    branch and keep `main` author-only.
 4. **Reconcile every stale count.** Pick the actual numbers (`341 tests`,
-   `29 commits`, `7,521 lines`, `3,008 weights`, `10,000 agents`,
+   `33 commits`, `7,521 lines`, `3,008 weights`, `10,000 agents`,
    `47 levers`, `8 factions`, `90 visualization files`) and use them
    verbatim in README, RESEARCH.md, MIT_MAKER_PORTFOLIO.md,
    BILAN_FINAL.md, and every other doc. A single source of truth.

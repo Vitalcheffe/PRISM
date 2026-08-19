@@ -170,7 +170,7 @@ You cannot maximize one sector without paying for it elsewhere. The system conse
 4. **Swarm** — 10,000 autonomous agents across 8 factions (labor, employers, military, clergy, youth, rural, urban elite, informal) update their trust, stress, and behavior every tick. When stress crosses 0.7, agents strike, riot, or rebel. Political threats (coup, civil war, revolution) are aggregated from the swarm state.
 5. **Govern** — the Kernel runs a 12-phase lifecycle every 200ms tick. The Life system ages agents (birth, education, work, reproduction, death — population stable at 10,000). The Governance system manages 8 ministries with real budget allocations (500 Mrd MAD total) and bureaucratic leakage.
 6. **Decree** — type a decree in French. The engine parses 38 NLP patterns, computes lever deltas and fiscal cost, projects 2 years forward, and returns a verdict: favorable, mitigé, défavorable, or catastrophique.
-7. **Validate** — a 263-test suite verifies every claim. An empirical harness runs sensitivity analysis (47×15 Jacobian), stability tests (10,000 ticks), hysteresis verification (the scar), and neural network accuracy (R²). Results are in VALIDATION.md.
+7. **Validate** — a 318-test suite verifies every claim. An empirical harness runs sensitivity analysis (47×15 Jacobian), stability tests (10,000 ticks), hysteresis verification (the scar), and neural network accuracy (R²). Results are in VALIDATION.md.
 
 ## NLP causal extraction
 
@@ -318,7 +318,7 @@ The manifesto below renders the project's founding words — "des liens de liens
 
 ## Tests and validation
 
-The engine is covered by a 263-test suite using Bun's built-in test runner. Every claim in this README is backed by a passing test: the 3,008-weight count is arithmetic-verified, the forward pass is deterministic, the He initialization has correct statistics, the HDI and life expectancy clamping prevents impossible values, the hysteresis leaves a scar, the kernel survives 1000 cycles, the population stays stable after 200 ticks.
+The engine is covered by a 318-test suite using Bun's built-in test runner. Every claim in this README is backed by a passing test: the 3,008-weight count is arithmetic-verified, the forward pass is deterministic, the He initialization has correct statistics, the HDI and life expectancy clamping prevents impossible values, the hysteresis leaves a scar, the kernel survives 1000 cycles, the population stays stable after 200 ticks.
 
 ```bash
 cd mini-services/simulation-engine && bun test
