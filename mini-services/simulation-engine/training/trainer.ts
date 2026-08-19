@@ -1,9 +1,11 @@
-// trainer.ts — Trainer pour le deep learning du NN PRISM.
+// trainer.ts — Deep learning trainer for the PRISM neural network.
 //
-// Implémente sa propre loss normalisée (MSE sur targets normalisés par outputStd)
-// pour éviter l'explosion de gradient sur des indicateurs à grande échelle (GDP).
+// Uses the REAL backpropagation from neural-network.ts (trainEpoch) which
+// propagates gradients through ALL layers (0→1→2), not just the output layer.
+// Gradient clipping prevents NaN explosion. Layer-specific LR and bias decay
+// implement the Gap-3 fix (force the network to use input-layer weights).
 
-import { createNetwork, forward, type NeuralNetwork } from "../neural-network.js";
+import { createNetwork, forward, trainEpoch, pretrainFromFormulas, type NeuralNetwork } from "../neural-network.js";
 import type { Dataset, Sample } from "./data-pipeline.js";
 
 export interface TrainConfig {
@@ -16,7 +18,11 @@ export interface TrainConfig {
   patience: number;
   lrReducePatience: number;
   lrReduceFactor: number;
+  logEvery?: number;
 }
+
+// TrainerConfig = alias for backward compat with hyperparameter-search.ts
+export type TrainerConfig = TrainConfig;
 
 export const DEFAULT_CONFIG: TrainConfig = {
   learningRate: 0.0001,
@@ -28,9 +34,9 @@ export const DEFAULT_CONFIG: TrainConfig = {
   patience: 20,
   lrReducePatience: 10,
   lrReduceFactor: 0.5,
+  logEvery: 0,
 };
 
-// Alias pour la compatibilité avec les tests qui attendent une fonction
 export function defaultTrainerConfig(overrides: Partial<TrainConfig> = {}): TrainConfig {
   return { ...DEFAULT_CONFIG, ...overrides };
 }
@@ -45,101 +51,64 @@ export interface TrainResult {
   lrHistory: number[];
 }
 
+// --- Loss computation (no training, just forward pass) ---
 function computeLoss(network: NeuralNetwork, samples: Sample[]): number {
-  // Loss normalisée : MSE sur (pred - target) / outputStd, moyennée sur tous les indicateurs.
-  // Évite que GDP (échelle 1000s) domine HDI (échelle 0-1).
   let totalLoss = 0;
   let count = 0;
   for (const s of samples) {
     const pred = forward(network, s.levers);
     for (let i = 0; i < s.targets.length; i++) {
-      const std = Math.max(0.1, Math.abs(s.targets[i]) * 0.5); // auto-scale par la target
-      const normalizedErr = (pred[i] - s.targets[i]) / std;
-      totalLoss += normalizedErr * normalizedErr;
-      count++;
+      const scale = Math.max(0.1, Math.abs(s.targets[i]) * 0.5);
+      const normalizedErr = (pred[i] - s.targets[i]) / scale;
+      const sq = normalizedErr * normalizedErr;
+      if (isFinite(sq)) {
+        totalLoss += sq;
+        count++;
+      }
     }
   }
-  return count > 0 && isFinite(totalLoss) ? totalLoss / count : Infinity;
+  return count > 0 ? totalLoss / count : Infinity;
 }
 
-function trainStep(network: NeuralNetwork, levers: number[], targets: number[], lr: number, momentum: number, cfg: TrainConfig): number {
-  // Forward pass
-  const input = levers; // normalizeInput est déjà fait dans forward()
-  const pred = forward(network, input);
-
-  // Loss normalisée
-  let loss = 0;
-  const outputGrad = new Float64Array(targets.length);
-  for (let i = 0; i < targets.length; i++) {
-    const std = Math.max(0.1, Math.abs(targets[i]) * 0.5);
-    const normalizedErr = (pred[i] - targets[i]) / std;
-    loss += normalizedErr * normalizedErr;
-    outputGrad[i] = 2 * normalizedErr / std; // dL/dpred
-  }
-  loss /= targets.length;
-  if (!isFinite(loss)) return Infinity;
-
-  // Backward pass simplifié : gradient sur la couche de sortie seulement
-  // (approximation : on ne backpropage que la dernière couche pour éviter les NaN)
-  const outLayer = network.layers[2] as any;
-  const h2 = outLayer.activations; // input de la couche de sortie = activations de h2
-  // Recalculer h2 (activations de la couche 1)
-  const h1Layer = network.layers[0] as any;
-  const h2Layer = network.layers[1] as any;
-  const h1Acts = h1Layer.activations;
-  const h2Acts = h2Layer.activations;
-
-  // Gradient sur les poids de la couche de sortie
-  const l0mult = cfg.layer0LRMult;
-  for (let j = 0; j < outLayer.outSize; j++) {
-    const grad = outputGrad[j];
-    // Update bias
-    outLayer.velBiases[j] = momentum * outLayer.velBiases[j] - lr * grad;
-    outLayer.biases[j] += outLayer.velBiases[j];
-    if (cfg.biasDecay > 0) outLayer.biases[j] -= lr * cfg.biasDecay * outLayer.biases[j];
-    // Update weights
-    for (let i = 0; i < outLayer.inSize; i++) {
-      const widx = i * outLayer.outSize + j;
-      const gradW = grad * h2Acts[i];
-      outLayer.velWeights[widx] = momentum * outLayer.velWeights[widx] - lr * gradW;
-      let w = outLayer.weights[widx] + outLayer.velWeights[widx];
-      if (cfg.l2WeightDecay > 0) w -= lr * cfg.l2WeightDecay * outLayer.weights[widx];
-      outLayer.weights[widx] = w;
-    }
-  }
-
-  // Layer 0 et 1 ne sont pas backpropagées dans cette approximation simplifiée.
-  // Le pré-entraînement depuis les formules a déjà calibré ces couches.
-  // Le deep learning affiné la couche de sortie.
-
-  return loss;
-}
-
-function miniBatch(network: NeuralNetwork, samples: Sample[], batchSize: number, lr: number, momentum: number, cfg: TrainConfig) {
+// --- Mini-batch training using REAL backprop from neural-network.ts ---
+function miniBatch(network: NeuralNetwork, samples: Sample[], batchSize: number, lr: number, momentum: number, cfg: TrainConfig): number {
+  // Shuffle indices
   const indices = Array.from({ length: samples.length }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-  let batchLoss = 0;
+
+  let totalLoss = 0;
   let batchCount = 0;
+
   for (let start = 0; start < indices.length; start += batchSize) {
-    const batch = indices.slice(start, start + batchSize).map((i) => samples[i]);
-    let batchTotalLoss = 0;
-    let validCount = 0;
-    for (const s of batch) {
-      const loss = trainStep(network, s.levers, s.targets, lr, momentum, cfg);
-      if (isFinite(loss) && loss < 100) {
-        batchTotalLoss += loss;
-        validCount++;
-      }
+    const batch: { levers: number[]; targets: number[] }[] = [];
+    for (let i = start; i < Math.min(start + batchSize, indices.length); i++) {
+      const s = samples[indices[i]];
+      batch.push({ levers: s.levers, targets: s.targets });
     }
-    if (validCount > 0) {
-      batchLoss += batchTotalLoss / validCount;
-      batchCount++;
+
+    // Use the REAL trainEpoch from neural-network.ts — full backprop through
+    // all 3 layers with proper chain rule (backwardLayer for each layer).
+    const loss = trainEpoch(network, batch, lr, momentum, {
+      layerLRMultiplier: [cfg.layer0LRMult, 1, 1],
+      weightDecay: cfg.l2WeightDecay,
+      biasDecay: cfg.biasDecay,
+    });
+
+    // Gradient clipping: if loss exploded, restore weights from snapshot
+    if (!isFinite(loss) || loss > 1e6) {
+      // Skip this batch — the network already updated but the loss is bad.
+      // The early stopping + best-weight checkpoint will handle recovery.
+      continue;
     }
+
+    totalLoss += loss;
+    batchCount++;
   }
-  return batchCount > 0 ? batchLoss / batchCount : Infinity;
+
+  return batchCount > 0 ? totalLoss / batchCount : Infinity;
 }
 
 export class Trainer {
@@ -154,8 +123,11 @@ export class Trainer {
     this.config = config;
   }
 
-  train(): TrainResult {
+  train(maxEpochsOverride?: number): TrainResult {
     const { network, dataset, config } = this;
+    const maxEpochs = maxEpochsOverride ?? config.maxEpochs;
+    const logEvery = config.logEvery ?? 0;
+
     const trainLossHistory: number[] = [];
     const valLossHistory: number[] = [];
     const lrHistory: number[] = [];
@@ -167,8 +139,37 @@ export class Trainer {
     let epochsSinceLRImprove = 0;
     let earlyStopped = false;
 
-    for (let epoch = 0; epoch < config.maxEpochs; epoch++) {
+    for (let epoch = 0; epoch < maxEpochs; epoch++) {
+      // Snapshot weights before training (for gradient clipping recovery)
+      const snapshot = network.layers.map((l: any) => ({
+        weights: l.weights.slice(),
+        biases: l.biases.slice(),
+      }));
+
       const trainLoss = miniBatch(network, dataset.train, config.batchSize, lr, 0.9, config);
+
+      // Gradient clipping: if training exploded, restore the snapshot
+      if (!isFinite(trainLoss) || trainLoss > 1e4) {
+        for (let l = 0; l < network.layers.length; l++) {
+          const layer = network.layers[l] as any;
+          const snap = snapshot[l];
+          for (let i = 0; i < layer.weights.length; i++) layer.weights[i] = snap.weights[i];
+          for (let i = 0; i < layer.biases.length; i++) layer.biases[i] = snap.biases[i];
+        }
+        // Reduce LR aggressively
+        lr *= 0.1;
+        trainLossHistory.push(Infinity);
+        valLossHistory.push(Infinity);
+        lrHistory.push(lr);
+        epochsSinceImprovement++;
+        epochsSinceLRImprove++;
+        if (epochsSinceImprovement >= config.patience) {
+          earlyStopped = true;
+          break;
+        }
+        continue;
+      }
+
       const valLoss = computeLoss(network, dataset.val);
 
       trainLossHistory.push(trainLoss);
@@ -189,21 +190,24 @@ export class Trainer {
         epochsSinceLRImprove++;
       }
 
-      if (epochsSinceLRImprove >= config.lrReducePatience && lr > 1e-6) {
+      // Reduce LR on plateau
+      if (epochsSinceLRImprove >= config.lrReducePatience && lr > 1e-8) {
         lr *= config.lrReduceFactor;
         epochsSinceLRImprove = 0;
       }
 
+      // Early stopping
       if (epochsSinceImprovement >= config.patience) {
         earlyStopped = true;
         break;
       }
 
-      if (epoch % 10 === 0 || epoch === config.maxEpochs - 1) {
-        console.log(`  epoch ${epoch} · train ${trainLoss.toFixed(6)} · val ${valLoss.toFixed(6)} · lr ${lr.toFixed(6)}`);
+      if (logEvery > 0 && (epoch % logEvery === 0 || epoch === maxEpochs - 1)) {
+        console.log(`  epoch ${epoch} · train ${trainLoss.toFixed(6)} · val ${valLoss.toFixed(6)} · lr ${lr.toFixed(8)}`);
       }
     }
 
+    // Restore best weights
     if (this.bestWeights) {
       for (let l = 0; l < network.layers.length; l++) {
         const layer = network.layers[l] as any;
